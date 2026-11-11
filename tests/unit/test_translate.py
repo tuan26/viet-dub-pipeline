@@ -46,7 +46,7 @@ def test_edge_voice_retries_dropped_requests(tmp_path, monkeypatch):
     calls = []
 
     class Communicate:
-        def __init__(self, text, voice, proxy=None):
+        def __init__(self, text, voice, **options):
             pass
 
         async def save(self, path):
@@ -65,3 +65,32 @@ def test_edge_voice_retries_dropped_requests(tmp_path, monkeypatch):
                                    "save": lambda self, path: (_ for _ in ()).throw(RuntimeError("down"))})))
     with pytest.raises(VietdubError, match="sau 2 lần thử"):
         tts.edge(retries=2, pause=0)("xin chào", tmp_path / "x")
+
+
+def test_line_left_in_chinese_is_retried_alone():
+    calls = []
+
+    def chat(system, user):
+        calls.append(user)
+        if "Dịch 1 câu" in user:
+            assert "chỉ viết bằng tiếng Việt" in user
+            return '["Tôi không có thời gian."]'
+        return '["Xin chào.", "我没有时间。"]'
+
+    s = segs(2)
+    assert translate(s, chat) == []
+    assert [x.translation for x in s] == ["Xin chào.", "Tôi không có thời gian."]
+    assert len(calls) == 2
+
+
+def test_line_that_stays_foreign_is_reported_not_fatal():
+    s = segs(2)
+    unresolved = translate(s, lambda system, user: '["我没有时间。"]' if "Dịch 1 câu" in user else '["Xin chào.", "我没有时间。"]')
+    assert unresolved == [2] and s[0].translation == "Xin chào."
+
+
+def test_malformed_single_reply_is_retried_before_failing():
+    replies = iter(["oops", "vẫn hỏng", '["được rồi"]'])
+    s = segs(1)
+    translate(s, lambda system, user: next(replies))
+    assert s[0].translation == "được rồi"

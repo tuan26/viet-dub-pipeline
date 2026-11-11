@@ -11,7 +11,8 @@ from ..models import VietdubError
 SynthFn = Callable[[str, Path], Path]  # (text, path without suffix) -> written audio file
 
 
-def edge(voice: str = "vi-VN-HoaiMyNeural", retries: int = 4, pause: float = 1.5) -> SynthFn:
+def edge(voice: str = "vi-VN-HoaiMyNeural", retries: int = 4, pause: float = 1.5,
+         pitch: str = "+0Hz", rate: str = "+0%") -> SynthFn:
     """Microsoft Edge online voices via the unofficial edge-tts package (needs internet)."""
     try:
         import edge_tts
@@ -28,7 +29,7 @@ def edge(voice: str = "vi-VN-HoaiMyNeural", retries: int = 4, pause: float = 1.5
         # The service drops a request now and then ("No audio was received"); retrying succeeds.
         for attempt in range(1, retries + 1):
             try:
-                asyncio.run(edge_tts.Communicate(text, voice, proxy=proxy).save(str(out)))
+                asyncio.run(edge_tts.Communicate(text, voice, proxy=proxy, pitch=pitch, rate=rate).save(str(out)))
                 return out
             except Exception as exc:  # the library raises many network error types
                 out.unlink(missing_ok=True)

@@ -1,0 +1,88 @@
+{
+  "_note": "Hội thoại tự viết. Mỗi cảnh được dịch trong một lô để model có ngữ cảnh. all: mọi mẫu phải khớp; any: ít nhất một mẫu khớp; none: không mẫu nào được khớp.",
+  "scenes": [
+    {"id": "en-office", "lang": "en", "lines": [
+      {"text": "We have less than an hour before the meeting.", "cat": "time",
+       "any": ["chưa (đầy|đến|tới) (một|1) (tiếng|giờ)", "(không|chẳng) (còn )?(đến|tới|đầy) (một|1) (tiếng|giờ)", "ít hơn (một|1) (tiếng|giờ)", "dưới (một|1) (tiếng|giờ)"],
+       "none": ["(?<!ít )hơn (một|1) (tiếng|giờ)"]},
+      {"text": "I didn't say he stole the money.", "cat": "negation",
+       "any": ["(không|chưa|chẳng) (hề |từng |có )?(nói|bảo)", "đâu có nói"]},
+      {"text": "The train leaves at a quarter to nine.", "cat": "time",
+       "any": ["8 ?(giờ|h|:) ?45", "tám giờ bốn (mươi )?lăm", "(9|chín) giờ kém (15|mười lăm)", "kém (15|mười lăm)"],
+       "none": ["(9|chín) ?(giờ|h|:) ?(15|mười lăm)"]},
+      {"text": "By the way, the deadline was moved to next Friday.", "cat": "idiom",
+       "any": ["thứ (sáu|6) (tuần )?(sau|tới)"], "none": ["\\bbtw\\b", "by the way"]},
+      {"text": "It's not that I don't trust you.", "cat": "negation",
+       "any": ["(không|chẳng|đâu) phải.*không tin", "không phải.*thiếu tin"]},
+      {"text": "Nobody told me the office was closed yesterday.", "cat": "negation",
+       "all": ["(không|chẳng|chả|chưa) (có )?ai", "hôm qua"]}
+    ]},
+    {"id": "en-numbers", "lang": "en", "lines": [
+      {"text": "We sold twelve hundred tickets, not twelve thousand.", "cat": "quantity",
+       "all": ["1[.,]?200|một (nghìn|ngàn) hai|mười hai trăm", "12[.,]?000|mười hai (nghìn|ngàn)|12 (nghìn|ngàn)|(một|1) vạn hai"]},
+      {"text": "Half of the fifty guests have already left.", "cat": "quantity",
+       "all": ["nửa|25|hai mươi lăm", "50|năm mươi"]},
+      {"text": "It costs two and a half million dong.", "cat": "quantity",
+       "any": ["2[,.]5 triệu", "(hai|2) triệu rưỡi", "(hai|2) triệu (năm|5) trăm", "2\\.500\\.000", "hai phẩy năm triệu"]},
+      {"text": "I'll be back in fifteen minutes at most.", "cat": "time",
+       "all": ["(15|mười lăm) phút", "tối đa|nhiều nhất|không quá|cùng lắm|lâu nhất|chậm nhất|muộn nhất"]},
+      {"text": "Only three of us passed the exam.", "cat": "quantity", "all": ["\\b(ba|3)\\b", "chỉ"]}
+    ]},
+    {"id": "en-names", "lang": "en", "lines": [
+      {"text": "Mr. Thompson, this is my colleague Mai Anh.", "cat": "names", "all": ["Thompson", "Mai Anh"]},
+      {"text": "Mai Anh has just moved here from Da Nang.", "cat": "names", "all": ["Mai Anh", "Đà Nẵng|Da Nang"]},
+      {"text": "Nice to meet you. Please call me David.", "cat": "names", "all": ["David"]},
+      {"text": "David, could you show her the lab on the third floor?", "cat": "names",
+       "all": ["David", "(tầng|lầu) (ba|3)|lầu (hai|2)"]}
+    ]},
+    {"id": "en-idioms", "lang": "en", "lines": [
+      {"text": "Break a leg tonight! You'll be great.", "cat": "idiom",
+       "any": ["chúc.*(may mắn|thành công|tốt|suôn sẻ)", "cố lên", "may mắn"], "none": ["gãy", "bẻ chân", "phá vỡ"]},
+      {"text": "It's raining cats and dogs out there.", "cat": "idiom",
+       "any": ["mưa (rất |quá |thật |đang |như )?(to|lớn|trút|tầm tã|xối xả|dữ|nặng)"], "none": ["chó", "mèo"]},
+      {"text": "That exam was a piece of cake.", "cat": "idiom", "any": ["dễ", "ngon ơ", "đơn giản", "nhẹ nhàng"], "none": ["bánh"]},
+      {"text": "Don't spill the beans about the surprise party.", "cat": "idiom",
+       "any": ["tiết lộ", "\\blộ\\b", "nói ra", "hé", "bật mí", "giữ (bí mật|kín)", "kể"], "none": ["đậu", "hạt"]},
+      {"text": "The old man finally kicked the bucket last winter.", "cat": "idiom",
+       "any": ["qua đời", "\\bmất\\b", "chết", "từ trần", "ra đi", "tạ thế", "nhắm mắt", "lìa đời"], "none": ["\\bxô\\b", "thùng"]},
+      {"text": "Go on, I'm all ears.", "cat": "idiom", "any": ["nghe", "nói đi"], "none": ["toàn (là )?tai", "đầy tai", "tất cả (là )?tai"]}
+    ]},
+    {"id": "en-family", "lang": "en", "lines": [
+      {"text": "Mom, I'm home!", "cat": "address", "all": ["\\b(mẹ|má)\\b", "\\bcon\\b"]},
+      {"text": "Did you eat anything at school, son?", "cat": "address", "all": ["\\bcon\\b"], "none": ["\\bbạn\\b", "\\banh\\b"]},
+      {"text": "Not yet. I'm starving.", "cat": "address", "all": ["chưa", "đói"], "none": ["\\btôi\\b", "\\bmình\\b"]},
+      {"text": "Then wash your hands. Dinner is ready.", "cat": "address", "all": ["rửa tay"], "none": ["\\bbạn\\b"]}
+    ]},
+    {"id": "zh-office", "lang": "zh", "lines": [
+      {"text": "会议还有不到半个小时就开始了。", "cat": "time",
+       "any": ["chưa (đầy|đến|tới) (nửa|30|ba mươi)", "(không|chẳng) (còn )?(đến|tới|đầy) (nửa|30)", "ít hơn (nửa|30)", "dưới (nửa|30)"],
+       "none": ["(?<!ít )hơn (nửa|30)"]},
+      {"text": "我不是不想帮你，是真的没时间。", "cat": "negation",
+       "all": ["(không|chẳng|đâu) phải.*không muốn", "không có thời gian|không rảnh|bận|hết thời gian"]},
+      {"text": "王经理让我们下午三点半去他办公室。", "cat": "names",
+       "all": ["Vương", "(3|ba) ?(giờ|h|:) ?(30|rưỡi|ba mươi)|15[:h]30"]},
+      {"text": "这个项目我们已经做了一年多了。", "cat": "quantity",
+       "any": ["hơn (một|1) năm", "(một|1) năm hơn", "hơn năm (nay|rồi)", "trên (một|1) năm", "(một|1) năm (có )?lẻ"]},
+      {"text": "小李，你把这份文件交给张老师。", "cat": "names", "all": ["\\bLý\\b", "Trương"]}
+    ]},
+    {"id": "zh-idioms", "lang": "zh", "lines": [
+      {"text": "别担心，这件事对他来说是小菜一碟。", "cat": "idiom",
+       "any": ["dễ", "chuyện nhỏ", "đơn giản", "nhỏ như con thỏ", "trong tầm tay", "không khó"], "none": ["món", "đĩa", "\\brau\\b"]},
+      {"text": "你这样做简直是画蛇添足。", "cat": "idiom",
+       "any": ["thừa", "vẽ rắn thêm chân", "không cần thiết", "vẽ vời", "làm quá", "vô ích"]},
+      {"text": "他一听到消息就马不停蹄地赶了过来。", "cat": "idiom",
+       "any": ["ngay", "lập tức", "vội", "tức tốc", "không (ngừng )?nghỉ", "một mạch", "gấp", "liền"], "none": ["móng ngựa", "con ngựa", "ngựa không"]},
+      {"text": "我们现在是骑虎难下了。", "cat": "idiom",
+       "any": ["tiến thoái lưỡng nan", "(cưỡi|ngồi) (trên )?lưng (hổ|cọp)", "đâm lao", "khó (mà |lòng )?(lùi|rút|dừng|xuống|thoát)", "không thể (lùi|rút|dừng|quay)", "thế (kẹt|khó|bí)"]}
+    ]},
+    {"id": "zh-family", "lang": "zh", "lines": [
+      {"text": "妈，我回来了！", "cat": "address", "all": ["\\b(mẹ|má)\\b", "\\bcon\\b"]},
+      {"text": "姐姐今天不回来吃饭，她要加班到九点。", "cat": "time",
+       "all": ["\\bchị\\b", "(9|chín) giờ|21 ?(giờ|h)", "(không|chẳng) (về|ăn)"]},
+      {"text": "那你爸呢？他说过几点到家吗？", "cat": "address", "all": ["\\b(bố|ba|cha)\\b"]},
+      {"text": "他没说。不过他从来没有超过七点回来。", "cat": "negation",
+       "all": ["(không|chưa|chẳng) (có )?(nói|bảo)", "(7|bảy) giờ", "chưa (bao giờ|từng)|(không|chẳng) bao giờ"]},
+      {"text": "我买了两斤苹果，一共才十五块钱。", "cat": "quantity", "all": ["táo", "15|mười lăm"]}
+    ]}
+  ]
+}

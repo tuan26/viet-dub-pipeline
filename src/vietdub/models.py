@@ -12,6 +12,7 @@ class Segment:
     end: float
     text: str
     translation: str = ""
+    speaker: str = ""
 
     @property
     def duration(self) -> float:
@@ -28,6 +29,7 @@ class Segment:
             end=float(data["end"]),
             text=data["text"],
             translation=data.get("translation", ""),
+            speaker=data.get("speaker", ""),
         )
 
 

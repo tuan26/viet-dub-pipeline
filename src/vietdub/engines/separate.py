@@ -8,8 +8,8 @@ from pathlib import Path
 from ..models import VietdubError
 
 
-def separate_background(audio: Path, workdir: Path) -> Path:
-    """Run Demucs and return the track without vocals (music and effects)."""
+def separate_background(audio: Path, workdir: Path) -> tuple[Path, Path]:
+    """Run Demucs; return (track without vocals, vocals only)."""
     try:
         import demucs  # noqa: F401
     except ImportError:
@@ -22,6 +22,7 @@ def separate_background(audio: Path, workdir: Path) -> Path:
     found = list(out_dir.glob(f"*/{audio.stem}/no_vocals.wav"))
     if proc.returncode != 0 or not found:
         raise VietdubError("Demucs lỗi:\n" + "\n".join(proc.stderr.strip().splitlines()[-5:]))
-    target = workdir / "background.wav"
-    shutil.copyfile(found[0], target)
-    return target
+    background, vocals = workdir / "background.wav", workdir / "vocals.wav"
+    shutil.copyfile(found[0], background)
+    shutil.copyfile(found[0].with_name("vocals.wav"), vocals)
+    return background, vocals

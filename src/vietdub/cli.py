@@ -20,6 +20,10 @@ def _engine_options() -> argparse.ArgumentParser:
     e.add_argument("--glossary", type=Path, help="File text: tên riêng và xưng hô cần giữ")
     e.add_argument("--tts", default="edge", help="edge, piper, beep (mặc định: edge)")
     e.add_argument("--voice", help="Giọng edge-tts (vd vi-VN-NamMinhNeural) hoặc file .onnx của Piper")
+    e.add_argument("--speakers", nargs="?", const="auto", metavar="N",
+                   help="Mỗi nhân vật một giọng; thêm số N nếu biết số nhân vật")
+    e.add_argument("--speaker-model", type=Path, default=Path("models/voxceleb_resnet34_LM.onnx"),
+                   help="File model người nói WeSpeaker (.onnx)")
     e.add_argument("--separate", action="store_true", help="Dùng Demucs giữ lại nhạc nền, bỏ giọng gốc")
     e.add_argument("--max-speed", type=float, default=1.4, help="Tăng tốc giọng đọc tối đa (mặc định 1.4)")
     e.add_argument("--force", action="store_true", help="Chạy lại mọi bước, bỏ qua kết quả đã lưu")
@@ -100,7 +104,25 @@ def _job(args: argparse.Namespace, video: Path, out: Path, rights: Rights, srt: 
     if args.separate:
         from .engines.separate import separate_background as separate
 
+    diarize = cast = None
+    if args.speakers:
+        if args.tts != "edge":
+            raise VietdubError("--speakers hiện chỉ dùng được với --tts edge.")
+        if args.speakers != "auto" and not (args.speakers.isdigit() and int(args.speakers) > 0):
+            raise VietdubError("--speakers nhận một số nguyên dương, hoặc để trống để tự đếm.")
+        from .engines import casting, diarize as dia
+
+        embed = dia.wespeaker(args.speaker_model)
+        count = None if args.speakers == "auto" else int(args.speakers)
+
+        def diarize(audio: Path, segments):
+            return dia.assign_speakers(audio, segments, embed, count)
+
+        def cast(speakers: dict):
+            return {s: tts.edge(v.name, pitch=v.pitch, rate=v.rate) for s, v in casting.cast(speakers).items()}
+
     return pipeline.Job(
+        diarize=diarize, cast=cast,
         video=video, out_dir=out, rights=rights, synth=tts.get(args.tts, args.voice), chat=chat,
         transcribe=transcribe, separate=separate, subtitles=srt, source_language=language,
         glossary=args.glossary.read_text(encoding="utf-8") if args.glossary else "",
@@ -113,6 +135,8 @@ def _summary(job, output: Path) -> None:
     print(f"Xong: {output}")
     print(f"  {rep['segments']} câu, {rep['sped_up']} câu phải tăng tốc, "
           f"{len(rep['truncated'])} câu bị cắt, {rep['elapsed_seconds']}s xử lý")
+    if rep.get("untranslated"):
+        print("  Câu bộ dịch chưa dịch được (cần sửa tay):", ", ".join(map(str, rep["untranslated"])))
     if rep["truncated"]:
         print("  Câu bị cắt (nên rút gọn bản dịch):", ", ".join(map(str, rep["truncated"])))
 

@@ -23,7 +23,11 @@ class Job:
     synth: SynthFn
     chat: ChatFn | None = None  # None: subtitles are already Vietnamese
     transcribe: Callable[[Path], list[Segment]] | None = None
-    separate: Callable[[Path, Path], Path] | None = None
+    separate: Callable[[Path, Path], tuple[Path, Path]] | None = None  # -> (background, vocals)
+    # Sets segment.speaker and returns {speaker: info}; None keeps a single voice.
+    diarize: Callable[[Path, list[Segment]], dict[str, dict]] | None = None
+    # Builds the voice of each speaker from that info.
+    cast: Callable[[dict[str, dict]], dict[str, SynthFn]] | None = None
     subtitles: Path | None = None  # existing SRT; skips speech recognition
     source_language: str | None = None
     glossary: str = ""
@@ -68,6 +72,19 @@ def run(job: Job) -> Path:
         media.extract_audio(job.video, audio)
         timed("extract_audio", t)
 
+    # Separation runs first so recognition and speaker detection can use clean vocals.
+    background, vocals = work / "background.wav", work / "vocals.wav"
+    if video_has_audio and job.separate is not None and (job.force or not (background.exists() and vocals.exists())):
+        job.log("      Tách giọng gốc khỏi nhạc nền")
+        t = time.time()
+        made_bg, made_vocals = job.separate(audio, work)
+        timed("separate_background", t)
+        if made_bg != background:
+            made_bg.replace(background)
+        if made_vocals != vocals:
+            made_vocals.replace(vocals)
+    speech = vocals if vocals.exists() and job.separate is not None else audio
+
     # 2. Segments
     seg_file = work / "segments.json"
     if seg_file.exists() and not job.force:
@@ -81,7 +98,7 @@ def run(job: Job) -> Path:
             raise VietdubError("Video không có phụ đề (--srt) và không có bộ nhận dạng giọng nói.")
         job.log("[2/6] Nhận dạng lời thoại")
         t = time.time()
-        segments = job.transcribe(audio)
+        segments = job.transcribe(speech)
         timed("speech_to_text", t)
         _save(seg_file, segments)
     segments = [s for s in segments if s.start < total]
@@ -94,7 +111,8 @@ def run(job: Job) -> Path:
         else:
             job.log(f"[3/6] Dịch {len(segments)} câu sang tiếng Việt")
             t = time.time()
-            translate(segments, job.chat, job.source_language, job.glossary)
+            untranslated = translate(segments, job.chat, job.source_language, job.glossary)
+            (work / "untranslated.json").write_text(json.dumps(untranslated), encoding="utf-8")
             timed("translate", t)
         _save(seg_file, segments)
 
@@ -102,6 +120,22 @@ def run(job: Job) -> Path:
     segments = [s for s in segments if any(c.isalnum() for c in s.translation)]
     if not segments:
         raise VietdubError("Không có câu thoại nào để lồng tiếng.")
+
+    # Speakers
+    voices: dict[str, SynthFn] = {}
+    speakers: dict[str, dict] = {}
+    speakers_file = work / "speakers.json"
+    if job.diarize is not None and job.cast is not None and video_has_audio:
+        if speakers_file.exists() and all(s.speaker for s in segments) and not job.force:
+            speakers = json.loads(speakers_file.read_text(encoding="utf-8"))
+        else:
+            job.log("      Nhận diện người nói")
+            t = time.time()
+            speakers = job.diarize(speech, segments)
+            timed("speakers", t)
+            _save(seg_file, segments)
+            speakers_file.write_text(json.dumps(speakers, ensure_ascii=False, indent=2), encoding="utf-8")
+        voices = job.cast(speakers)
 
     # 4. Voice
     t = time.time()
@@ -112,7 +146,8 @@ def run(job: Job) -> Path:
         if existing and not job.force:
             raw.append(existing[0])
         else:
-            raw.append(job.synth(seg.translation, clips_dir / f"{seg.index:05d}_raw"))
+            synth = voices.get(seg.speaker, job.synth)
+            raw.append(synth(seg.translation, clips_dir / f"{seg.index:05d}_raw"))
 
     timed("text_to_speech", t)
 
@@ -135,12 +170,6 @@ def run(job: Job) -> Path:
     bed, bed_volume = None, 1.0
     if video_has_audio:
         if job.separate is not None:
-            background = work / "background.wav"
-            if job.force or not background.exists():
-                job.log("      Tách nhạc nền khỏi giọng gốc")
-                t = time.time()
-                background = job.separate(audio, work)
-                timed("separate_background", t)
             bed = background
         else:
             bed, bed_volume = audio, job.original_volume
@@ -163,6 +192,8 @@ def run(job: Job) -> Path:
         "sped_up": len(sped),
         "max_speed_used": max((p.speed for p in sped), default=1.0),
         "truncated": [p.index for p in placements if p.truncated],
+        "speakers": speakers,
+        "untranslated": json.loads((work / "untranslated.json").read_text()) if (work / "untranslated.json").exists() else [],
         "background": "separated" if job.separate and video_has_audio else "ducked-original",
         "stage_seconds": stages,
         "output_bytes": output.stat().st_size,

@@ -13,7 +13,7 @@ from ..models import Segment, VietdubError
 
 PRESETS = {
     # name: (base_url, default model, env var holding the API key or None)
-    "ollama": ("http://localhost:11434/v1", "qwen2.5:7b", None),
+    "ollama": ("http://localhost:11434/v1", "gemma3:12b", None),
     "gemini": ("https://generativelanguage.googleapis.com/v1beta/openai", "gemini-2.5-flash", "GEMINI_API_KEY"),
 }
 
@@ -23,6 +23,19 @@ SYSTEM = (
     "Giữ nhất quán tên riêng. Chỉ trả về một mảng JSON các chuỗi, đúng số lượng và thứ tự câu được đưa vào."
 )
 
+# Candidate prompt: explicit rules for the error types seen in real runs.
+SYSTEM_STRICT = (
+    "Bạn là biên dịch viên lồng tiếng phim, dịch hội thoại sang tiếng Việt.\n"
+    "Quy tắc bắt buộc:\n"
+    "1. Giữ đúng nghĩa phủ định, so sánh (ít hơn/nhiều hơn/chưa đến), con số, giờ giấc, ngày tháng.\n"
+    "2. Thành ngữ, tiếng lóng: dịch theo NGHĨA, không dịch từng chữ.\n"
+    "3. Không để sót từ nước ngoài; chỉ giữ nguyên tên riêng. Tên người Trung Quốc chuyển sang âm Hán-Việt.\n"
+    "4. Xưng hô theo quan hệ nhân vật trong ngữ cảnh (mẹ-con, sếp-nhân viên, bạn bè) và giữ nhất quán.\n"
+    "5. Câu ngắn gọn, tự nhiên như lời nói, đọc vừa thời lượng câu gốc.\n"
+    "Chỉ trả về một mảng JSON các chuỗi, đúng số lượng và thứ tự câu được đưa vào, không giải thích."
+)
+PROMPTS = {"basic": SYSTEM, "strict": SYSTEM_STRICT}
+
 ChatFn = Callable[[str, str], str]
 
 
@@ -31,6 +44,7 @@ class ChatConfig:
     base_url: str
     model: str
     api_key: str | None = None
+    temperature: float = 0.0
 
     @classmethod
     def from_preset(cls, name: str, model: str | None, base_url: str | None) -> "ChatConfig":
@@ -45,7 +59,7 @@ class ChatConfig:
     def chat(self, system: str, user: str) -> str:
         body = json.dumps({
             "model": self.model,
-            "temperature": 0.3,
+            "temperature": self.temperature,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
         }).encode()
         headers = {"Content-Type": "application/json"}
@@ -73,15 +87,38 @@ def _parse_list(reply: str, expected: int) -> list[str] | None:
     return [x.strip() for x in items]
 
 
+_FOREIGN = re.compile(r"[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]")  # Chinese, kana, Korean
+REMINDER = "\nLưu ý: chỉ viết bằng tiếng Việt, không để lại chữ Trung, Nhật, Hàn hay nguyên văn câu gốc."
+
+
+def _suspect(source: str, translation: str) -> bool:
+    """A line the model failed to translate: foreign script left in, or the source echoed back."""
+    return bool(_FOREIGN.search(translation)) or (
+        len(source.split()) > 2 and translation.strip().lower() == source.strip().lower())
+
+
 def translate(
     segments: list[Segment],
     chat: ChatFn,
     source_language: str | None = None,
     glossary: str = "",
     batch_size: int = 40,
-) -> None:
-    """Fill ``translation`` on every segment. Batches keep context between lines;
-    a batch whose reply is malformed is retried one line at a time."""
+    system: str = SYSTEM_STRICT,
+    retries: int = 2,
+) -> list[int]:
+    """Fill ``translation`` on every segment and return the indexes of lines that are
+    still not Vietnamese after retrying. Batches keep context between lines; a malformed
+    batch reply, or a line left untranslated, is retried one line at a time."""
+    unresolved: list[int] = []
+
+    def one(seg: Segment, extra: str = "") -> str | None:
+        for _ in range(retries + 1):
+            single = _parse_list(
+                chat(system, f"Dịch 1 câu thoại sau{lang}.{notes}{extra}\n" + json.dumps([seg.text], ensure_ascii=False)), 1)
+            if single is not None and not _suspect(seg.text, single[0]):
+                return single[0]
+        return single[0] if single is not None else None
+
     lang = f" (ngôn ngữ gốc: {source_language})" if source_language else ""
     notes = f"\nBảng tên riêng và xưng hô cần tuân theo:\n{glossary}\n" if glossary.strip() else ""
     for start in range(0, len(segments), batch_size):
@@ -90,16 +127,18 @@ def translate(
             f"Dịch {len(batch)} câu thoại sau{lang}.{notes}\n"
             + json.dumps([s.text for s in batch], ensure_ascii=False)
         )
-        result = _parse_list(chat(SYSTEM, prompt), len(batch))
+        result = _parse_list(chat(system, prompt), len(batch))
         if result is None:
             result = []
             for seg in batch:
-                single = _parse_list(
-                    chat(SYSTEM, f"Dịch 1 câu thoại sau{lang}.{notes}\n" + json.dumps([seg.text], ensure_ascii=False)),
-                    1,
-                )
-                if single is None:
+                text = one(seg)
+                if text is None:
                     raise VietdubError(f"Bộ dịch trả về sai định dạng ở câu {seg.index}: {seg.text!r}")
-                result.append(single[0])
+                result.append(text)
         for seg, text in zip(batch, result):
+            if _suspect(seg.text, text):
+                text = one(seg, REMINDER) or text
+                if _suspect(seg.text, text):
+                    unresolved.append(seg.index)
             seg.translation = text
+    return unresolved

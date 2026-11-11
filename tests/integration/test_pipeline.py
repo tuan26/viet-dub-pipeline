@@ -132,3 +132,48 @@ def test_batch_dubs_fetched_items_with_catalog_rights(clip, tmp_path, monkeypatc
     report = json.loads((out / "report.json").read_text(encoding="utf-8"))
     assert report["segments"] == 2  # the music-only line is skipped
     assert "text_to_speech" in report["stage_seconds"] and report["output_bytes"] > 0
+
+
+def test_each_speaker_gets_its_own_voice(clip, tmp_path):
+    used = []
+
+    def voice(name):
+        def synth(text, stem):
+            used.append((name, text))
+            return tts.beep()(text, stem)
+        return synth
+
+    def diarize(audio, segments):
+        for seg, who in zip(segments, ["S1", "S2", "S1"]):
+            seg.speaker = who
+        return {"S1": {"gender": "male", "lines": 2}, "S2": {"gender": "female", "lines": 1}}
+
+    job = make_job(clip, tmp_path, diarize=diarize, cast=lambda info: {s: voice(s) for s in info})
+    pipeline.run(job)
+
+    assert [name for name, _ in used] == ["S1", "S2", "S1"]
+    assert job.report["speakers"]["S2"]["gender"] == "female"
+    saved = json.loads((tmp_path / "out" / "work" / "segments.json").read_text(encoding="utf-8"))
+    assert [s["speaker"] for s in saved] == ["S1", "S2", "S1"]
+
+
+def test_separation_feeds_vocals_to_recognition_and_background_to_the_mix(clip, tmp_path):
+    video, _ = clip
+    heard = {}
+
+    def separate(audio, work):
+        bg, vocals = work / "bg_made.wav", work / "vocals_made.wav"
+        for path in (bg, vocals):
+            subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "sine=frequency=300:duration=6", str(path)], check=True)
+        return bg, vocals
+
+    def transcribe(audio):
+        heard["file"] = audio.name
+        from vietdub.models import Segment
+        return [Segment(1, 0.5, 1.5, "Xin chào")]
+
+    job = pipeline.Job(video=video, out_dir=tmp_path / "out", rights=check_rights("owned", "test", None),
+                       synth=tts.beep(), transcribe=transcribe, separate=separate, log=lambda m: None)
+    pipeline.run(job)
+    assert heard["file"] == "vocals.wav"
+    assert job.report["background"] == "separated"
