@@ -39,6 +39,8 @@ def clip(tmp_path):
 
 
 def fake_chat(system, user):
+    if "Viết lại" in user:  # request to shorten a line: this fake cannot
+        return "từ " * 40  # not shorter, so it is rejected
     lines = json.loads(user[user.index("[") :])
     return json.dumps([f"dịch {t}" for t in lines], ensure_ascii=False)
 
@@ -177,3 +179,16 @@ def test_separation_feeds_vocals_to_recognition_and_background_to_the_mix(clip, 
     pipeline.run(job)
     assert heard["file"] == "vocals.wav"
     assert job.report["background"] == "separated"
+
+
+def test_line_that_does_not_fit_is_reworded_shorter(clip, tmp_path):
+    def chat(system, user):
+        if "Viết lại" in user:
+            return "ngắn thôi"
+        return fake_chat(system, user)
+
+    job = make_job(clip, tmp_path)
+    job.chat = chat
+    pipeline.run(job)
+    assert job.report["shortened"] == [2] and job.report["truncated"] == []
+    assert "ngắn thôi" in (tmp_path / "out" / "clip.vi.srt").read_text(encoding="utf-8")

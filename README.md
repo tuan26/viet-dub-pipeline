@@ -41,6 +41,26 @@ xoá `out/work/clips/` rồi chạy lại để đọc lại theo bản đã s�
 | Giọng đọc | edge-tts (online), Piper (offline), beep (chạy thử) | `--tts`, `--voice` |
 | Nhạc nền | hạ nhỏ tiếng gốc, hoặc Demucs tách giọng | `--separate` |
 
+## Nhiều nhân vật, nhạc nền
+
+```bash
+pip install -e '.[asr,tts,speakers,separate]'
+```
+
+Tải model người nói (26 MB, CC-BY-4.0) về `models/voxceleb_resnet34_LM.onnx` từ
+https://huggingface.co/Wespeaker/wespeaker-voxceleb-resnet34-LM rồi:
+
+```bash
+vietdub run phim.mp4 --lang en --speakers --separate --license cc-by --source "https://..." --attribution "Tác giả"
+```
+
+- `--speakers` gán mỗi người nói một giọng; thêm số (`--speakers 2`) nếu biết số nhân vật.
+- `--cast S1=male,S2=female` sửa giới tính giọng khi máy đoán sai (xem `speakers` trong `report.json`).
+- `--separate` dùng Demucs bỏ giọng gốc, giữ nhạc và hiệu ứng.
+
+Nhận diện người nói tự động chưa đủ tin cậy trên phim thật; số đo và giới hạn ở `docs/quality-evaluation.md`.
+Model dịch mặc định là `gemma3:12b` (35/39 trên bộ test dịch, so với 18/39 của `qwen2.5:7b`); cần khoảng 14 GB RAM.
+
 ## Tự tìm và tải video
 
 Cài thêm `pip install -e '.[ingest]'`. Có hai hướng, chi tiết ở `specs/003-licensed-ingest/quickstart.md`:

@@ -55,7 +55,7 @@ def wespeaker(model_path: Path) -> EmbedFn:
     return embed
 
 
-def cluster(vectors, threshold: float = 0.55, speakers: int | None = None) -> list[int]:
+def cluster(vectors, threshold: float = 0.75, speakers: int | None = None, min_lines: int = 1) -> list[int]:
     """Average-linkage clustering on cosine distance. Merging stops at ``speakers``
     clusters when given, otherwise when the closest pair is further than ``threshold``."""
     import numpy as np
@@ -75,6 +75,14 @@ def cluster(vectors, threshold: float = 0.55, speakers: int | None = None) -> li
             break
         a, b = pair
         groups[a] += groups.pop(b)
+    # A "speaker" with fewer than min_lines lines is usually a noisy embedding of a
+    # short line, so it joins the nearest real speaker.
+    if speakers is None and min_lines > 1:
+        big = [g for g in groups if len(g) >= min_lines]
+        if big:
+            for small in [g for g in groups if len(g) < min_lines]:
+                min(big, key=lambda g: dist[np.ix_(small, g)].mean()).extend(small)
+            groups = big
     labels = [0] * len(x)
     # number speakers in order of first appearance
     for number, group in enumerate(sorted(groups, key=min)):
@@ -107,14 +115,17 @@ def assign_speakers(
     segments: list[Segment],
     embed: EmbedFn,
     speakers: int | None = None,
-    threshold: float = 0.55,
+    threshold: float = 0.75,
+    context: float = 2.5,
 ) -> dict[str, dict]:
     """Set ``segment.speaker`` ("S1", "S2", ...) and return per-speaker info:
     {"S1": {"lines": n, "pitch_hz": f, "gender": "male" | "female"}}."""
     import numpy as np
 
     samples = load_audio(audio)
-    min_len = int(1.0 * RATE)
+    # Film lines are short (about 1-2 s); measured on real films, embeddings of such short
+    # pieces are too noisy to cluster, so each line is widened to ``context`` seconds.
+    min_len = int(context * RATE)
     pieces = []
     for seg in segments:
         a, b = int(seg.start * RATE), int(seg.end * RATE)
@@ -122,13 +133,13 @@ def assign_speakers(
             pad = (min_len - (b - a)) // 2
             a, b = max(0, a - pad), min(len(samples), b + pad)
         pieces.append(samples[a:b] if b > a else samples[:min_len])
-    labels = cluster([embed(p) for p in pieces], threshold, speakers)
+    labels = cluster([embed(p) for p in pieces], threshold, speakers, min_lines=2)
     info: dict[str, dict] = {}
     for seg, label, piece in zip(segments, labels, pieces):
         seg.speaker = f"S{label + 1}"
         info.setdefault(seg.speaker, {"lines": 0, "_pitch": []})
         info[seg.speaker]["lines"] += 1
-        f0 = pitch(piece)
+        f0 = pitch(samples[int(seg.start * RATE) : int(seg.end * RATE)])
         if f0:
             info[seg.speaker]["_pitch"].append(f0)
     for data in info.values():

@@ -22,6 +22,8 @@ def _engine_options() -> argparse.ArgumentParser:
     e.add_argument("--voice", help="Giọng edge-tts (vd vi-VN-NamMinhNeural) hoặc file .onnx của Piper")
     e.add_argument("--speakers", nargs="?", const="auto", metavar="N",
                    help="Mỗi nhân vật một giọng; thêm số N nếu biết số nhân vật")
+    e.add_argument("--cast", metavar="S1=male,S2=female",
+                   help="Chỉ định giới tính giọng cho từng nhân vật khi máy đoán sai")
     e.add_argument("--speaker-model", type=Path, default=Path("models/voxceleb_resnet34_LM.onnx"),
                    help="File model người nói WeSpeaker (.onnx)")
     e.add_argument("--separate", action="store_true", help="Dùng Demucs giữ lại nhạc nền, bỏ giọng gốc")
@@ -118,7 +120,17 @@ def _job(args: argparse.Namespace, video: Path, out: Path, rights: Rights, srt: 
         def diarize(audio: Path, segments):
             return dia.assign_speakers(audio, segments, embed, count)
 
+        forced = {}
+        for pair in filter(None, (args.cast or "").split(",")):
+            name, _, gender = pair.partition("=")
+            if gender not in ("male", "female"):
+                raise VietdubError("--cast có dạng S1=male,S2=female.")
+            forced[name.strip()] = gender
+
         def cast(speakers: dict):
+            for name, gender in forced.items():
+                if name in speakers:
+                    speakers[name]["gender"] = gender
             return {s: tts.edge(v.name, pitch=v.pitch, rate=v.rate) for s, v in casting.cast(speakers).items()}
 
     return pipeline.Job(

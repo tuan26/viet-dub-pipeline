@@ -1,5 +1,8 @@
 # Kiểm chứng end-to-end ngày 2026-11-11
 
+> Đợt kiểm chứng đầu tiên (clip tự tạo). Kết quả trên phim thật, `vietdub batch` chạy thật và so sánh model dịch
+> nằm ở `docs/quality-evaluation.md`; ở đó thay thế các mục "chưa chạy" bên dưới.
+
 Một lần chạy thật trên máy 4 nhân CPU, 15 GB RAM, không GPU. Số liệu "đo" là từ lần chạy này;
 số liệu "ước tính" được ghi rõ.
 

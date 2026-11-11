@@ -44,3 +44,11 @@ def test_cast_gives_each_speaker_a_distinct_voice_by_gender():
 def test_words_are_split_into_lines_at_pauses():
     words = [(0.5, 0.8, " Hello"), (0.8, 1.2, " there."), (2.4, 2.7, " Hi"), (2.75, 3.0, " you.")]
     assert split_on_pauses(words) == [(0.5, 1.2, "Hello there."), (2.4, 3.0, "Hi you.")]
+
+
+def test_single_line_clusters_join_the_nearest_speaker():
+    a, b, noisy_a = [1, 0, 0], [0, 1, 0], [0.6, 0.1, 0.8]  # the last is a poor embedding of speaker a
+    vectors = [a, a, a, b, b, b, noisy_a]
+    assert len(set(diarize.cluster(vectors, threshold=0.3))) == 3
+    labels = diarize.cluster(vectors, threshold=0.3, min_lines=2)
+    assert len(set(labels)) == 2 and labels[6] == labels[0]

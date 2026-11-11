@@ -94,3 +94,21 @@ def test_malformed_single_reply_is_retried_before_failing():
     s = segs(1)
     translate(s, lambda system, user: next(replies))
     assert s[0].translation == "được rồi"
+
+
+@pytest.mark.parametrize("reply", [
+    "Ngắn hơn rồi.", '"Ngắn hơn rồi."', '["Ngắn hơn rồi."]',
+    '```json\n{\n  "rewritten": "Ngắn hơn rồi."\n}\n```', "Ngắn hơn rồi.\n(giải thích thêm)",
+])
+def test_shorten_accepts_the_reply_shapes_models_use(reply):
+    from vietdub.engines.translate import shorten
+
+    seg = Segment(1, 0, 1, "It is much shorter now, I promise you.", "Bây giờ nó đã ngắn hơn rất nhiều rồi, tôi hứa.")
+    assert shorten(seg, lambda system, user: reply, 4) == "Ngắn hơn rồi."
+
+
+def test_shorten_rejects_a_reply_that_is_not_shorter():
+    from vietdub.engines.translate import shorten
+
+    seg = Segment(1, 0, 1, "Hi.", "Chào.")
+    assert shorten(seg, lambda system, user: "Xin chào bạn nhé.", 2) is None

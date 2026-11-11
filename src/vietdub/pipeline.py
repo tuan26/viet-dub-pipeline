@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Callable
 
 from . import media, srt, timing
-from .engines.translate import ChatFn, translate
+from .engines.translate import ChatFn, shorten, translate
 from .engines.tts import SynthFn
 from .models import Segment, VietdubError
 from .rights import Rights
@@ -151,12 +151,42 @@ def run(job: Job) -> Path:
 
     timed("text_to_speech", t)
 
+    def trimmed(clip: Path) -> Path:
+        out = clip.with_name(clip.name.split("_raw")[0] + "_trim.wav")
+        media.trim_silence(clip, out)
+        return out if media.duration(out) > 0.05 else clip  # keep the original if trimming ate it
+
+    spoken = [trimmed(clip) for clip in raw]
+
     # 5. Timing and dub track
     t = time.time()
     job.log("[5/6] Khớp thời lượng và ghép đường tiếng")
-    placements = timing.plan(segments, [media.duration(p) for p in raw], total, job.max_speed)
+    placements = timing.plan(segments, [media.duration(p) for p in spoken], total, job.max_speed)
+
+    # A line that still does not fit after speeding up is reworded shorter and read again, once.
+    shortened: list[int] = []
+    if job.chat is not None and (job.force or not (work / "shortened.json").exists()):
+        for i, (seg, placement) in enumerate(zip(segments, placements)):
+            if not placement.truncated:
+                continue
+            needed = media.duration(spoken[i]) / job.max_speed
+            words = len(seg.translation.split())
+            tighter = shorten(seg, job.chat, max(2, int(words * placement.length / needed * 0.95)))
+            if tighter:
+                seg.translation = tighter
+                raw[i].unlink()
+                raw[i] = voices.get(seg.speaker, job.synth)(tighter, clips_dir / f"{seg.index:05d}_raw")
+                spoken[i] = trimmed(raw[i])
+                shortened.append(seg.index)
+        (work / "shortened.json").write_text(json.dumps(shortened), encoding="utf-8")
+        if shortened:
+            _save(seg_file, segments)
+            placements = timing.plan(segments, [media.duration(p) for p in spoken], total, job.max_speed)
+    elif (work / "shortened.json").exists():
+        shortened = json.loads((work / "shortened.json").read_text())
+
     fitted = []
-    for placement, clip in zip(placements, raw):
+    for placement, clip in zip(placements, spoken):
         out = clips_dir / f"{placement.index:05d}_fit.wav"
         changed = placement.speed > 1.0 or placement.truncated
         media.to_dub_wav(clip, out, placement.speed, placement.length if changed else None)
@@ -193,6 +223,7 @@ def run(job: Job) -> Path:
         "max_speed_used": max((p.speed for p in sped), default=1.0),
         "truncated": [p.index for p in placements if p.truncated],
         "speakers": speakers,
+        "shortened": shortened,
         "untranslated": json.loads((work / "untranslated.json").read_text()) if (work / "untranslated.json").exists() else [],
         "background": "separated" if job.separate and video_has_audio else "ducked-original",
         "stage_seconds": stages,

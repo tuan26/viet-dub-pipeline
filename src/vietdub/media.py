@@ -45,6 +45,14 @@ def extract_audio(video: Path, out: Path, rate: int = 44100) -> None:
     _run(["ffmpeg", "-y", "-v", "error", "-i", str(video), "-vn", "-ac", "2", "-ar", str(rate), str(out)])
 
 
+def trim_silence(src: Path, out: Path) -> None:
+    """Cut the silence TTS engines put before and after the speech. Measured on real
+    runs it is about a second per clip, enough to make one-word lines miss their slot."""
+    edge = "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.02"
+    _run(["ffmpeg", "-y", "-v", "error", "-i", str(src), "-af", f"{edge},areverse,{edge},areverse",
+          "-ac", "1", "-ar", str(DUB_RATE), "-c:a", "pcm_s16le", str(out)])
+
+
 def to_dub_wav(src: Path, out: Path, speed: float = 1.0, length: float | None = None) -> None:
     """Convert a TTS clip to mono 16-bit WAV, optionally sped up and trimmed with a short fade."""
     filters = []

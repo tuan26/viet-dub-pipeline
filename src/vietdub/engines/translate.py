@@ -97,6 +97,34 @@ def _suspect(source: str, translation: str) -> bool:
         len(source.split()) > 2 and translation.strip().lower() == source.strip().lower())
 
 
+def _plain_line(reply: str) -> str:
+    """Models answer a one-line request as bare text, a JSON array, a JSON object or a
+    fenced block; take the first string whichever it is."""
+    body = re.sub(r"^```\w*\s*|\s*```$", "", reply.strip())
+    try:
+        value = json.loads(body)
+        while isinstance(value, (list, dict)) and value:
+            value = next(iter(value.values())) if isinstance(value, dict) else value[0]
+        body = value if isinstance(value, str) else ""
+    except ValueError:
+        body = body.splitlines()[0] if body else ""
+    return body.strip().strip('"“”').strip()
+
+
+def shorten(seg: Segment, chat: ChatFn, max_words: int) -> str | None:
+    """Ask for a tighter wording of a line that does not fit its time slot.
+    Returns None when the model does not produce a shorter Vietnamese line."""
+    reply = chat(
+        "Bạn biên tập lời thoại lồng tiếng. Viết lại câu tiếng Việt cho ngắn hơn, giữ ý chính, "
+        "giữ nguyên xưng hô, con số và phủ định. Chỉ trả về đúng câu đã viết lại, không giải thích.",
+        f"Câu gốc: {seg.text}\nBản dịch hiện tại: {seg.translation}\nViết lại trong tối đa {max_words} tiếng.",
+    )
+    text = _plain_line(reply)
+    if not text or _suspect(seg.text, text):
+        return None
+    return text if len(text.split()) < len(seg.translation.split()) else None
+
+
 def translate(
     segments: list[Segment],
     chat: ChatFn,

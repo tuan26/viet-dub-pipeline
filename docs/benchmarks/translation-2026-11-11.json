@@ -1,0 +1,1656 @@
+{
+ "qwen7b-basic": {
+  "summary": {
+   "passed": 17,
+   "total": 39,
+   "by_category": {
+    "address": "1/6",
+    "idiom": "5/11",
+    "names": "4/6",
+    "negation": "2/5",
+    "quantity": "3/6",
+    "time": "2/5"
+   },
+   "label": "qwen7b-basic",
+   "prompt": "basic",
+   "temperature": 0.3,
+   "seconds": 275.3,
+   "failed_scenes": 1
+  },
+  "results": [
+   {
+    "scene": "en-office",
+    "cat": "time",
+    "source": "We have less than an hour before the meeting.",
+    "translation": "Chúng ta còn chưa đầy một giờ trước cuộc họp.",
+    "problems": []
+   },
+   {
+    "scene": "en-office",
+    "cat": "negation",
+    "source": "I didn't say he stole the money.",
+    "translation": "Tôi không nói anh ấy đã lấy tiền.",
+    "problems": []
+   },
+   {
+    "scene": "en-office",
+    "cat": "time",
+    "source": "The train leaves at a quarter to nine.",
+    "translation": "Đường sắt rời站台在九点一刻出发。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "không khớp phương án nào: 8 ?(giờ|h|:) ?45 | tám giờ bốn (mươi )?lăm | (9|chín) giờ kém (15|mười lăm)"
+    ]
+   },
+   {
+    "scene": "en-office",
+    "cat": "idiom",
+    "source": "By the way, the deadline was moved to next Friday.",
+    "translation": "顺便说一句，截止日期改到了下个星期五。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "không khớp phương án nào: thứ (sáu|6) (tuần )?(sau|tới)"
+    ]
+   },
+   {
+    "scene": "en-office",
+    "cat": "negation",
+    "source": "It's not that I don't trust you.",
+    "translation": "我不是不信任你。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "không khớp phương án nào: (không|chẳng|đâu) phải.*không tin | không phải.*thiếu tin"
+    ]
+   },
+   {
+    "scene": "en-office",
+    "cat": "negation",
+    "source": "Nobody told me the office was closed yesterday.",
+    "translation": "没有人告诉我昨天办公室关门了。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "thiếu: (không|chẳng|chả|chưa) (có )?ai",
+     "thiếu: hôm qua"
+    ]
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "We sold twelve hundred tickets, not twelve thousand.",
+    "translation": "Chúng tôi đã bán 1200 vé, không phải 12.000.",
+    "problems": []
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "Half of the fifty guests have already left.",
+    "translation": "Bảy mươi phần một nửa số khách đã rời đi.",
+    "problems": [
+     "thiếu: 50|năm mươi"
+    ]
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "It costs two and a half million dong.",
+    "translation": "Chi phí là hai triệu năm trăm đồng.",
+    "problems": []
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "time",
+    "source": "I'll be back in fifteen minutes at most.",
+    "translation": "Tôi sẽ trở lại trong vòng mười lăm phút.",
+    "problems": [
+     "thiếu: tối đa|nhiều nhất|không quá|cùng lắm|lâu nhất|chậm nhất|muộn nhất"
+    ]
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "Only three of us passed the exam.",
+    "translation": "Chỉ có ba người trong chúng tôi đỗ kỳ thi.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "Mr. Thompson, this is my colleague Mai Anh.",
+    "translation": "Thầy Thompson, đây là đồng nghiệp Mai Anh của tôi.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "Mai Anh has just moved here from Da Nang.",
+    "translation": "Mai Anh vừa chuyển đến từ Đà Nẵng.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "Nice to meet you. Please call me David.",
+    "translation": "Hân hạnh gặp bạn. Bạn có thể gọi tôi là David.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "David, could you show her the lab on the third floor?",
+    "translation": "David, bạn có thể dẫn cô ấy lên phòng thí nghiệm ở tầng ba không?",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "Break a leg tonight! You'll be great.",
+    "translation": "Chúc may mắn tối nay! Em sẽ làm rất tốt!",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "It's raining cats and dogs out there.",
+    "translation": "Ngoài kia đang mưa như trút nước.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "That exam was a piece of cake.",
+    "translation": "Thử nghiệm đó dễ như ăn bánh.",
+    "problems": [
+     "có nội dung sai: bánh"
+    ]
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "Don't spill the beans about the surprise party.",
+    "translation": "Không được tiết lộ về bữa tiệc bất ngờ.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "The old man finally kicked the bucket last winter.",
+    "translation": "Cụ già cuối cùng mất vào mùa đông năm ngoái.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "Go on, I'm all ears.",
+    "translation": "Được rồi, em lắng nghe.",
+    "problems": []
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Mom, I'm home!",
+    "translation": "",
+    "problems": [
+     "bản dịch rỗng"
+    ]
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Did you eat anything at school, son?",
+    "translation": "",
+    "problems": [
+     "bản dịch rỗng"
+    ]
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Not yet. I'm starving.",
+    "translation": "",
+    "problems": [
+     "bản dịch rỗng"
+    ]
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Then wash your hands. Dinner is ready.",
+    "translation": "",
+    "problems": [
+     "bản dịch rỗng"
+    ]
+   },
+   {
+    "scene": "zh-office",
+    "cat": "time",
+    "source": "会议还有不到半个小时就开始了。",
+    "translation": "Hội nghị chỉ còn chưa đầy nửa giờ nữa là bắt đầu.",
+    "problems": []
+   },
+   {
+    "scene": "zh-office",
+    "cat": "negation",
+    "source": "我不是不想帮你，是真的没时间。",
+    "translation": "Tôi không phải là không muốn giúp bạn, chỉ là tôi really không có thời gian.",
+    "problems": []
+   },
+   {
+    "scene": "zh-office",
+    "cat": "names",
+    "source": "王经理让我们下午三点半去他办公室。",
+    "translation": "经理王让我们下午三点半去他的办公室。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "thiếu: Vương",
+     "thiếu: (3|ba) ?(giờ|h|:) ?(30|rưỡi|ba mươi)|15[:h]30"
+    ]
+   },
+   {
+    "scene": "zh-office",
+    "cat": "quantity",
+    "source": "这个项目我们已经做了一年多了。",
+    "translation": "我们已经做这个项目一年多啦。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "không khớp phương án nào: hơn (một|1) năm | (một|1) năm hơn | hơn năm (nay|rồi)"
+    ]
+   },
+   {
+    "scene": "zh-office",
+    "cat": "names",
+    "source": "小李，你把这份文件交给张老师。",
+    "translation": "小李，你把这份文件交给张老师.",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "thiếu: \\bLý\\b",
+     "thiếu: Trương"
+    ]
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "别担心，这件事对他来说是小菜一碟。",
+    "translation": "đừng lo, chuyện này đối với anh ấy là小事一桩。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "không khớp phương án nào: dễ | chuyện nhỏ | đơn giản"
+    ]
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "你这样做简直是画蛇添足。",
+    "translation": "你这样做简直是多此一举。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "không khớp phương án nào: thừa | vẽ rắn thêm chân | không cần thiết"
+    ]
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "他一听到消息就马不停蹄地赶了过来。",
+    "translation": "他一听消息就赶紧过来了。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "không khớp phương án nào: ngay | lập tức | vội"
+    ]
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "我们现在是骑虎难下了。",
+    "translation": "我们现在是进退两难了。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "không khớp phương án nào: tiến thoái lưỡng nan | (cưỡi|ngồi) (trên )?lưng (hổ|cọp) | đâm lao"
+    ]
+   },
+   {
+    "scene": "zh-family",
+    "cat": "address",
+    "source": "妈，我回来了！",
+    "translation": "Mẹ, con về rồi!",
+    "problems": []
+   },
+   {
+    "scene": "zh-family",
+    "cat": "time",
+    "source": "姐姐今天不回来吃饭，她要加班到九点。",
+    "translation": "Em gái今天不回来吃饭，她要加班到九点。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "thiếu: \\bchị\\b",
+     "thiếu: (9|chín) giờ|21 ?(giờ|h)",
+     "thiếu: (không|chẳng) (về|ăn)"
+    ]
+   },
+   {
+    "scene": "zh-family",
+    "cat": "address",
+    "source": "那你爸呢？他说过几点到家吗？",
+    "translation": "那你爸呢？他有没有说过几点回家？",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "thiếu: \\b(bố|ba|cha)\\b"
+    ]
+   },
+   {
+    "scene": "zh-family",
+    "cat": "negation",
+    "source": "他没说。不过他从来没有超过七点回来。",
+    "translation": "他没说。不过他从来没有超过七点回来过。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "thiếu: (không|chưa|chẳng) (có )?(nói|bảo)",
+     "thiếu: (7|bảy) giờ",
+     "thiếu: chưa (bao giờ|từng)|(không|chẳng) bao giờ"
+    ]
+   },
+   {
+    "scene": "zh-family",
+    "cat": "quantity",
+    "source": "我买了两斤苹果，一共才十五块钱。",
+    "translation": "我买了两斤苹果，一共才十五块钱.",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "thiếu: táo",
+     "thiếu: 15|mười lăm"
+    ]
+   }
+  ]
+ },
+ "qwen7b-strict": {
+  "summary": {
+   "passed": 18,
+   "total": 39,
+   "by_category": {
+    "address": "1/6",
+    "idiom": "4/11",
+    "names": "4/6",
+    "negation": "2/5",
+    "quantity": "5/6",
+    "time": "2/5"
+   },
+   "label": "qwen7b-strict",
+   "prompt": "strict",
+   "temperature": 0.0,
+   "seconds": 242.9,
+   "failed_scenes": 0
+  },
+  "results": [
+   {
+    "scene": "en-office",
+    "cat": "time",
+    "source": "We have less than an hour before the meeting.",
+    "translation": "Chúng ta còn ít hơn một giờ trước cuộc họp.",
+    "problems": []
+   },
+   {
+    "scene": "en-office",
+    "cat": "negation",
+    "source": "I didn't say he stole the money.",
+    "translation": "Tôi không nói anh ta đã lấy tiền.",
+    "problems": []
+   },
+   {
+    "scene": "en-office",
+    "cat": "time",
+    "source": "The train leaves at a quarter to nine.",
+    "translation": "Đường sắt rời站台在九点差一刻.",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "không khớp phương án nào: 8 ?(giờ|h|:) ?45 | tám giờ bốn (mươi )?lăm | (9|chín) giờ kém (15|mười lăm)"
+    ]
+   },
+   {
+    "scene": "en-office",
+    "cat": "idiom",
+    "source": "By the way, the deadline was moved to next Friday.",
+    "translation": "顺便说一句，截止日期改到下个星期五了.",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "không khớp phương án nào: thứ (sáu|6) (tuần )?(sau|tới)"
+    ]
+   },
+   {
+    "scene": "en-office",
+    "cat": "negation",
+    "source": "It's not that I don't trust you.",
+    "translation": "我不是不信任你.",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "không khớp phương án nào: (không|chẳng|đâu) phải.*không tin | không phải.*thiếu tin"
+    ]
+   },
+   {
+    "scene": "en-office",
+    "cat": "negation",
+    "source": "Nobody told me the office was closed yesterday.",
+    "translation": "没有人告诉我昨天办公室关门了.",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "thiếu: (không|chẳng|chả|chưa) (có )?ai",
+     "thiếu: hôm qua"
+    ]
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "We sold twelve hundred tickets, not twelve thousand.",
+    "translation": "Chúng tôi đã bán 1200 vé, không phải 12.000.",
+    "problems": []
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "Half of the fifty guests have already left.",
+    "translation": "Nửa số khách mời là năm mươi người đã rời đi.",
+    "problems": []
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "It costs two and a half million dong.",
+    "translation": "Chi phí là hai triệu rưỡi đồng Việt Nam.",
+    "problems": []
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "time",
+    "source": "I'll be back in fifteen minutes at most.",
+    "translation": "Tôi sẽ trở lại trong vòng mười lăm phút.",
+    "problems": [
+     "thiếu: tối đa|nhiều nhất|không quá|cùng lắm|lâu nhất|chậm nhất|muộn nhất"
+    ]
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "Only three of us passed the exam.",
+    "translation": "Chỉ có ba trong chúng tôi vượt qua kỳ thi.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "Mr. Thompson, this is my colleague Mai Anh.",
+    "translation": "Thầy Thompson, đây là đồng nghiệp của tôi Mai Anh.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "Mai Anh has just moved here from Da Nang.",
+    "translation": "Mai Anh vừa chuyển đến từ Đà Nẵng.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "Nice to meet you. Please call me David.",
+    "translation": "Hạnh phúc gặp bạn. Bạn có thể gọi tôi là David.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "David, could you show her the lab on the third floor?",
+    "translation": "David, bạn có thể dẫn cô ấy lên phòng thí nghiệm ở tầng ba không?",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "Break a leg tonight! You'll be great.",
+    "translation": "Chúc bạn diễnTonight! Bạn sẽ tuyệt vời.",
+    "problems": [
+     "không khớp phương án nào: chúc.*(may mắn|thành công|tốt|suôn sẻ) | cố lên | may mắn"
+    ]
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "It's raining cats and dogs out there.",
+    "translation": "Mưa như trút nước ngoài kia.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "That exam was a piece of cake.",
+    "translation": "Thử nghiệm đó dễ như ăn bánh.",
+    "problems": [
+     "có nội dung sai: bánh"
+    ]
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "Don't spill the beans about the surprise party.",
+    "translation": "Không được tiết lộ về bữa tiệc bất ngờ.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "The old man finally kicked the bucket last winter.",
+    "translation": "Cụ già cuối cùng ra đi vào mùa đông năm trước.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "Go on, I'm all ears.",
+    "translation": "Tiếp tục, tôi sẵn sàng nghe.",
+    "problems": []
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Mom, I'm home!",
+    "translation": "Mẹ, tôi về nhà rồi!",
+    "problems": [
+     "thiếu: \\bcon\\b"
+    ]
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Did you eat anything at school, son?",
+    "translation": "Con có ăn gì ở trường chưa, con trai?",
+    "problems": []
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Not yet. I'm starving.",
+    "translation": "Chưa呢，我还真饿了。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "thiếu: đói"
+    ]
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Then wash your hands. Dinner is ready.",
+    "translation": "那你快去洗手，晚餐准备好了.",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "thiếu: rửa tay"
+    ]
+   },
+   {
+    "scene": "zh-office",
+    "cat": "time",
+    "source": "会议还有不到半个小时就开始了。",
+    "translation": "Hội nghị còn chưa đến ba mươi phút nữa là bắt đầu.",
+    "problems": []
+   },
+   {
+    "scene": "zh-office",
+    "cat": "negation",
+    "source": "我不是不想帮你，是真的没时间。",
+    "translation": "Tôi không phải là không muốn giúp bạn, chỉ là tôi really không có thời gian.",
+    "problems": []
+   },
+   {
+    "scene": "zh-office",
+    "cat": "names",
+    "source": "王经理让我们下午三点半去他办公室。",
+    "translation": "Lý quản lý bảo chúng tôi chiều ba giờ ba mươi đi văn phòng ông ta.",
+    "problems": [
+     "thiếu: Vương"
+    ]
+   },
+   {
+    "scene": "zh-office",
+    "cat": "quantity",
+    "source": "这个项目我们已经做了一年多了。",
+    "translation": "Dự án này chúng tôi đã làm hơn một năm rồi.",
+    "problems": []
+   },
+   {
+    "scene": "zh-office",
+    "cat": "names",
+    "source": "小李，你把这份文件交给张老师。",
+    "translation": "Xiao Li, bạn hãy đưa bản file này cho giáo sư Zhang.",
+    "problems": [
+     "thiếu: \\bLý\\b",
+     "thiếu: Trương"
+    ]
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "别担心，这件事对他来说是小菜一碟。",
+    "translation": "đừng lo, chuyện này đối với anh ấy là小事一桩。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "không khớp phương án nào: dễ | chuyện nhỏ | đơn giản"
+    ]
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "你这样做简直是画蛇添足。",
+    "translation": "你这样做简直是多此一举。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "không khớp phương án nào: thừa | vẽ rắn thêm chân | không cần thiết"
+    ]
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "他一听到消息就马不停蹄地赶了过来。",
+    "translation": "他一听消息就立刻赶过来了。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "không khớp phương án nào: ngay | lập tức | vội"
+    ]
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "我们现在是骑虎难下了。",
+    "translation": "我们现在是骑虎难下。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "không khớp phương án nào: tiến thoái lưỡng nan | (cưỡi|ngồi) (trên )?lưng (hổ|cọp) | đâm lao"
+    ]
+   },
+   {
+    "scene": "zh-family",
+    "cat": "address",
+    "source": "妈，我回来了！",
+    "translation": "Mẹ, tôi về rồi!",
+    "problems": [
+     "thiếu: \\bcon\\b"
+    ]
+   },
+   {
+    "scene": "zh-family",
+    "cat": "time",
+    "source": "姐姐今天不回来吃饭，她要加班到九点。",
+    "translation": "Em gái今天不回来吃饭，她要加班到九点。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "thiếu: \\bchị\\b",
+     "thiếu: (9|chín) giờ|21 ?(giờ|h)",
+     "thiếu: (không|chẳng) (về|ăn)"
+    ]
+   },
+   {
+    "scene": "zh-family",
+    "cat": "address",
+    "source": "那你爸呢？他说过几点到家吗？",
+    "translation": "那你爸呢？他说过几点到家吗？",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "thiếu: \\b(bố|ba|cha)\\b"
+    ]
+   },
+   {
+    "scene": "zh-family",
+    "cat": "negation",
+    "source": "他没说。不过他从来没有超过七点回来。",
+    "translation": "他没说。不过他从来没有超过七点回来。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "thiếu: (không|chưa|chẳng) (có )?(nói|bảo)",
+     "thiếu: (7|bảy) giờ",
+     "thiếu: chưa (bao giờ|từng)|(không|chẳng) bao giờ"
+    ]
+   },
+   {
+    "scene": "zh-family",
+    "cat": "quantity",
+    "source": "我买了两斤苹果，一共才十五块钱。",
+    "translation": "我买了两斤苹果，一共才十五块钱.",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "thiếu: táo",
+     "thiếu: 15|mười lăm"
+    ]
+   }
+  ]
+ },
+ "qwen7b-strict-retry": {
+  "summary": {
+   "passed": 24,
+   "total": 39,
+   "by_category": {
+    "address": "2/6",
+    "idiom": "7/11",
+    "names": "4/6",
+    "negation": "4/5",
+    "quantity": "5/6",
+    "time": "2/5"
+   },
+   "label": "qwen7b-strict-retry",
+   "prompt": "strict",
+   "temperature": 0.0,
+   "seconds": 322.2,
+   "failed_scenes": 0
+  },
+  "results": [
+   {
+    "scene": "en-office",
+    "cat": "time",
+    "source": "We have less than an hour before the meeting.",
+    "translation": "Chúng ta còn ít hơn một giờ trước cuộc họp.",
+    "problems": []
+   },
+   {
+    "scene": "en-office",
+    "cat": "negation",
+    "source": "I didn't say he stole the money.",
+    "translation": "Tôi không nói anh ta đã lấy tiền.",
+    "problems": []
+   },
+   {
+    "scene": "en-office",
+    "cat": "time",
+    "source": "The train leaves at a quarter to nine.",
+    "translation": "Tàu rời ga lúc tám giờ chín mươi lăm.",
+    "problems": [
+     "không khớp phương án nào: 8 ?(giờ|h|:) ?45 | tám giờ bốn (mươi )?lăm | (9|chín) giờ kém (15|mười lăm)"
+    ]
+   },
+   {
+    "scene": "en-office",
+    "cat": "idiom",
+    "source": "By the way, the deadline was moved to next Friday.",
+    "translation": "Thôi thì hạn nộp đã được chuyển sang tuần sau.",
+    "problems": [
+     "không khớp phương án nào: thứ (sáu|6) (tuần )?(sau|tới)"
+    ]
+   },
+   {
+    "scene": "en-office",
+    "cat": "negation",
+    "source": "It's not that I don't trust you.",
+    "translation": "Đó không phải là tôi không tin bạn.",
+    "problems": []
+   },
+   {
+    "scene": "en-office",
+    "cat": "negation",
+    "source": "Nobody told me the office was closed yesterday.",
+    "translation": "Ai bảo tôi hôm qua phòng làm việc đóng cửa.",
+    "problems": [
+     "thiếu: (không|chẳng|chả|chưa) (có )?ai"
+    ]
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "We sold twelve hundred tickets, not twelve thousand.",
+    "translation": "Chúng tôi đã bán 1200 vé, không phải 12.000.",
+    "problems": []
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "Half of the fifty guests have already left.",
+    "translation": "Nửa số khách mời là năm mươi người đã rời đi.",
+    "problems": []
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "It costs two and a half million dong.",
+    "translation": "Chi phí là hai triệu rưỡi đồng Việt Nam.",
+    "problems": []
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "time",
+    "source": "I'll be back in fifteen minutes at most.",
+    "translation": "Tôi sẽ trở lại trong vòng mười lăm phút.",
+    "problems": [
+     "thiếu: tối đa|nhiều nhất|không quá|cùng lắm|lâu nhất|chậm nhất|muộn nhất"
+    ]
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "Only three of us passed the exam.",
+    "translation": "Chỉ có ba trong chúng tôi vượt qua kỳ thi.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "Mr. Thompson, this is my colleague Mai Anh.",
+    "translation": "Thầy Thompson, đây là đồng nghiệp của tôi Mai Anh.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "Mai Anh has just moved here from Da Nang.",
+    "translation": "Mai Anh vừa chuyển đến từ Đà Nẵng.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "Nice to meet you. Please call me David.",
+    "translation": "Hạnh phúc gặp bạn. Bạn có thể gọi tôi là David.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "David, could you show her the lab on the third floor?",
+    "translation": "David, bạn có thể dẫn cô ấy lên phòng thí nghiệm ở tầng ba không?",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "Break a leg tonight! You'll be great.",
+    "translation": "Chúc bạn diễnTonight! Bạn sẽ tuyệt vời.",
+    "problems": [
+     "không khớp phương án nào: chúc.*(may mắn|thành công|tốt|suôn sẻ) | cố lên | may mắn"
+    ]
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "It's raining cats and dogs out there.",
+    "translation": "Mưa như trút nước ngoài kia.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "That exam was a piece of cake.",
+    "translation": "Thử nghiệm đó dễ như ăn bánh.",
+    "problems": [
+     "có nội dung sai: bánh"
+    ]
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "Don't spill the beans about the surprise party.",
+    "translation": "Không được tiết lộ về bữa tiệc bất ngờ.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "The old man finally kicked the bucket last winter.",
+    "translation": "Cụ già cuối cùng ra đi vào mùa đông năm trước.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "Go on, I'm all ears.",
+    "translation": "Tiếp tục, tôi sẵn sàng nghe.",
+    "problems": []
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Mom, I'm home!",
+    "translation": "Mẹ, tôi về nhà rồi!",
+    "problems": [
+     "thiếu: \\bcon\\b"
+    ]
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Did you eat anything at school, son?",
+    "translation": "Con có ăn gì ở trường chưa, con trai?",
+    "problems": []
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Not yet. I'm starving.",
+    "translation": "Chưa呢，我饿死了。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "thiếu: đói"
+    ]
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Then wash your hands. Dinner is ready.",
+    "translation": "Rửa tay nhé. Cơm đã sẵn rồi.",
+    "problems": []
+   },
+   {
+    "scene": "zh-office",
+    "cat": "time",
+    "source": "会议还有不到半个小时就开始了。",
+    "translation": "Hội nghị còn chưa đến ba mươi phút nữa là bắt đầu.",
+    "problems": []
+   },
+   {
+    "scene": "zh-office",
+    "cat": "negation",
+    "source": "我不是不想帮你，是真的没时间。",
+    "translation": "Tôi không phải là không muốn giúp bạn, chỉ là tôi really không có thời gian.",
+    "problems": []
+   },
+   {
+    "scene": "zh-office",
+    "cat": "names",
+    "source": "王经理让我们下午三点半去他办公室。",
+    "translation": "Lý quản lý bảo chúng tôi chiều ba giờ ba mươi đi văn phòng ông ta.",
+    "problems": [
+     "thiếu: Vương"
+    ]
+   },
+   {
+    "scene": "zh-office",
+    "cat": "quantity",
+    "source": "这个项目我们已经做了一年多了。",
+    "translation": "Dự án này chúng tôi đã làm hơn một năm rồi.",
+    "problems": []
+   },
+   {
+    "scene": "zh-office",
+    "cat": "names",
+    "source": "小李，你把这份文件交给张老师。",
+    "translation": "Xiao Li, bạn hãy đưa bản file này cho giáo sư Zhang.",
+    "problems": [
+     "thiếu: \\bLý\\b",
+     "thiếu: Trương"
+    ]
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "别担心，这件事对他来说是小菜一碟。",
+    "translation": "Không cần lo lắng, đối với anh ấy đây chỉ là chuyện nhỏ.",
+    "problems": []
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "你这样做简直是画蛇添足。",
+    "translation": "Bạn làm vậy thật là thừa thêm chi tiết.",
+    "problems": []
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "他一听到消息就马不停蹄地赶了过来。",
+    "translation": "Anh ấy vừa nghe tin tức đã lập tức chạy đến.",
+    "problems": []
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "我们现在是骑虎难下了。",
+    "translation": "Bây giờ chúng tôi đã陷入困境，进退两难了.",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "không khớp phương án nào: tiến thoái lưỡng nan | (cưỡi|ngồi) (trên )?lưng (hổ|cọp) | đâm lao"
+    ]
+   },
+   {
+    "scene": "zh-family",
+    "cat": "address",
+    "source": "妈，我回来了！",
+    "translation": "Mẹ, tôi về rồi!",
+    "problems": [
+     "thiếu: \\bcon\\b"
+    ]
+   },
+   {
+    "scene": "zh-family",
+    "cat": "time",
+    "source": "姐姐今天不回来吃饭，她要加班到九点。",
+    "translation": "Em gái今天不回来吃饭，她要加班到九点。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "thiếu: \\bchị\\b",
+     "thiếu: (9|chín) giờ|21 ?(giờ|h)",
+     "thiếu: (không|chẳng) (về|ăn)"
+    ]
+   },
+   {
+    "scene": "zh-family",
+    "cat": "address",
+    "source": "那你爸呢？他说过几点到家吗？",
+    "translation": "Con trai bạn đâu? Nó có nói đến nhà lúc mấy giờ không?",
+    "problems": [
+     "thiếu: \\b(bố|ba|cha)\\b"
+    ]
+   },
+   {
+    "scene": "zh-family",
+    "cat": "negation",
+    "source": "他没说。不过他从来没有超过七点回来。",
+    "translation": "Anh ấy không nói. Tuy nhiên, anh ấy chưa bao giờ trở về muộn hơn bảy giờ.",
+    "problems": []
+   },
+   {
+    "scene": "zh-family",
+    "cat": "quantity",
+    "source": "我买了两斤苹果，一共才十五块钱。",
+    "translation": "Tôi mua hai斤苹果，一共才十五块钱。",
+    "problems": [
+     "còn chữ nước ngoài chưa dịch",
+     "thiếu: táo",
+     "thiếu: 15|mười lăm"
+    ]
+   }
+  ]
+ },
+ "gemma12b-basic": {
+  "summary": {
+   "passed": 35,
+   "total": 39,
+   "by_category": {
+    "address": "6/6",
+    "idiom": "9/11",
+    "names": "6/6",
+    "negation": "5/5",
+    "quantity": "6/6",
+    "time": "3/5"
+   },
+   "label": "gemma12b-basic",
+   "prompt": "basic",
+   "temperature": 0.3,
+   "seconds": 437.4,
+   "failed_scenes": 0
+  },
+  "results": [
+   {
+    "scene": "en-office",
+    "cat": "time",
+    "source": "We have less than an hour before the meeting.",
+    "translation": "Chúng ta chỉ còn ít hơn một tiếng trước cuộc họp.",
+    "problems": []
+   },
+   {
+    "scene": "en-office",
+    "cat": "negation",
+    "source": "I didn't say he stole the money.",
+    "translation": "Tôi không nói anh ấy ăn trộm tiền đâu.",
+    "problems": []
+   },
+   {
+    "scene": "en-office",
+    "cat": "time",
+    "source": "The train leaves at a quarter to nine.",
+    "translation": "Tàu sẽ đi lúc 8 giờ 45.",
+    "problems": []
+   },
+   {
+    "scene": "en-office",
+    "cat": "idiom",
+    "source": "By the way, the deadline was moved to next Friday.",
+    "translation": "À, mà thời hạn đã được dời sang thứ Sáu tới rồi.",
+    "problems": []
+   },
+   {
+    "scene": "en-office",
+    "cat": "negation",
+    "source": "It's not that I don't trust you.",
+    "translation": "Không phải là tôi không tin cậu.",
+    "problems": []
+   },
+   {
+    "scene": "en-office",
+    "cat": "negation",
+    "source": "Nobody told me the office was closed yesterday.",
+    "translation": "Chưa ai báo tôi văn phòng đóng cửa hôm qua.",
+    "problems": []
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "We sold twelve hundred tickets, not twelve thousand.",
+    "translation": "Chúng ta bán một nghìn hai trăm vé, không phải một vạn hai nghìn.",
+    "problems": []
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "Half of the fifty guests have already left.",
+    "translation": "Nửa trong số năm mươi khách đã rời đi rồi.",
+    "problems": []
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "It costs two and a half million dong.",
+    "translation": "Giá là hai triệu rưỡi.",
+    "problems": []
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "time",
+    "source": "I'll be back in fifteen minutes at most.",
+    "translation": "Tôi quay lại sau mười lăm phút nữa thôi.",
+    "problems": [
+     "thiếu: tối đa|nhiều nhất|không quá|cùng lắm|lâu nhất|chậm nhất|muộn nhất"
+    ]
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "Only three of us passed the exam.",
+    "translation": "Chỉ có ba người chúng ta vượt qua kỳ thi.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "Mr. Thompson, this is my colleague Mai Anh.",
+    "translation": "Ông Thompson, đây là đồng nghiệp của tôi, Mai Anh.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "Mai Anh has just moved here from Da Nang.",
+    "translation": "Mai Anh vừa chuyển đến từ Đà Nẵng ạ.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "Nice to meet you. Please call me David.",
+    "translation": "Rất vui được gặp anh. Làm ơn gọi tôi là David nhé.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "David, could you show her the lab on the third floor?",
+    "translation": "David, cậu đưa cô ấy xuống phòng thí nghiệm ở tầng ba nhé.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "Break a leg tonight! You'll be great.",
+    "translation": "Chúc may mắn tối nay! Cậu sẽ làm tốt đấy.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "It's raining cats and dogs out there.",
+    "translation": "Trời mưa to như trút nước luôn.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "That exam was a piece of cake.",
+    "translation": "Bài kiểm tra hôm nay dễ ợt.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "Don't spill the beans about the surprise party.",
+    "translation": "Đừng tiết lộ bất ngờ về bữa tiệc nhé.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "The old man finally kicked the bucket last winter.",
+    "translation": "Ông lão cuối cùng cũng qua đời vào mùa đông năm ngoái.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "Go on, I'm all ears.",
+    "translation": "Nói đi, tớ đang lắng nghe đây.",
+    "problems": []
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Mom, I'm home!",
+    "translation": "Mẹ ơi, con về!",
+    "problems": []
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Did you eat anything at school, son?",
+    "translation": "Học hành có ăn gì chưa con?",
+    "problems": []
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Not yet. I'm starving.",
+    "translation": "Chưa mẹ. Con đói quá.",
+    "problems": []
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Then wash your hands. Dinner is ready.",
+    "translation": "Rửa tay đi nhé, tối nay có món ngon rồi.",
+    "problems": []
+   },
+   {
+    "scene": "zh-office",
+    "cat": "time",
+    "source": "会议还有不到半个小时就开始了。",
+    "translation": "Cuộc họp bắt đầu sau nửa tiếng nữa.",
+    "problems": [
+     "không khớp phương án nào: chưa (đầy|đến|tới) (nửa|30|ba mươi) | (không|chẳng) (còn )?(đến|tới|đầy) (nửa|30) | ít hơn (nửa|30)"
+    ]
+   },
+   {
+    "scene": "zh-office",
+    "cat": "negation",
+    "source": "我不是不想帮你，是真的没时间。",
+    "translation": "Tôi không phải không muốn giúp, thật sự là hết thời gian rồi.",
+    "problems": []
+   },
+   {
+    "scene": "zh-office",
+    "cat": "names",
+    "source": "王经理让我们下午三点半去他办公室。",
+    "translation": "Anh Vương bảo chiều ba giờ rưỡi chúng ta đến văn phòng anh ấy.",
+    "problems": []
+   },
+   {
+    "scene": "zh-office",
+    "cat": "quantity",
+    "source": "这个项目我们已经做了一年多了。",
+    "translation": "Chúng ta đã làm dự án này hơn một năm rồi.",
+    "problems": []
+   },
+   {
+    "scene": "zh-office",
+    "cat": "names",
+    "source": "小李，你把这份文件交给张老师。",
+    "translation": "Tiểu Lý, cậu đưa tài liệu này cho cô giáo Trương nhé.",
+    "problems": []
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "别担心，这件事对他来说是小菜一碟。",
+    "translation": "Đừng lo, chuyện này với anh ta là nhỏ.",
+    "problems": [
+     "không khớp phương án nào: dễ | chuyện nhỏ | đơn giản"
+    ]
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "你这样做简直是画蛇添足。",
+    "translation": "Anh làm vậy thừa thãi đấy.",
+    "problems": []
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "他一听到消息就马不停蹄地赶了过来。",
+    "translation": "Nghe tin xong, anh ta vội vàng đến ngay.",
+    "problems": []
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "我们现在是骑虎难下了。",
+    "translation": "Bây giờ chúng ta vào rồi.",
+    "problems": [
+     "không khớp phương án nào: tiến thoái lưỡng nan | (cưỡi|ngồi) (trên )?lưng (hổ|cọp) | đâm lao"
+    ]
+   },
+   {
+    "scene": "zh-family",
+    "cat": "address",
+    "source": "妈，我回来了！",
+    "translation": "Mẹ ơi, con về rồi!",
+    "problems": []
+   },
+   {
+    "scene": "zh-family",
+    "cat": "time",
+    "source": "姐姐今天不回来吃饭，她要加班到九点。",
+    "translation": "Chị dâu hôm nay không về ăn cơm, chị ấy phải làm đến chín giờ.",
+    "problems": []
+   },
+   {
+    "scene": "zh-family",
+    "cat": "address",
+    "source": "那你爸呢？他说过几点到家吗？",
+    "translation": "Ba đâu? Ba nói mấy giờ về nhà?",
+    "problems": []
+   },
+   {
+    "scene": "zh-family",
+    "cat": "negation",
+    "source": "他没说。不过他从来没有超过七点回来。",
+    "translation": "Ba không nói gì. Nhưng ba chưa bao giờ về muộn hơn bảy giờ.",
+    "problems": []
+   },
+   {
+    "scene": "zh-family",
+    "cat": "quantity",
+    "source": "我买了两斤苹果，一共才十五块钱。",
+    "translation": "Con mua hai cân táo, chỉ có mười lăm đồng thôi.",
+    "problems": []
+   }
+  ]
+ },
+ "gemma12b-strict": {
+  "summary": {
+   "passed": 35,
+   "total": 39,
+   "by_category": {
+    "address": "6/6",
+    "idiom": "9/11",
+    "names": "6/6",
+    "negation": "4/5",
+    "quantity": "6/6",
+    "time": "4/5"
+   },
+   "label": "gemma12b-strict",
+   "prompt": "strict",
+   "temperature": 0.0,
+   "seconds": 447.0,
+   "failed_scenes": 0
+  },
+  "results": [
+   {
+    "scene": "en-office",
+    "cat": "time",
+    "source": "We have less than an hour before the meeting.",
+    "translation": "Chúng ta chỉ còn ít hơn một tiếng nữa trước cuộc họp.",
+    "problems": []
+   },
+   {
+    "scene": "en-office",
+    "cat": "negation",
+    "source": "I didn't say he stole the money.",
+    "translation": "Tôi không hề nói anh ta ăn trộm tiền.",
+    "problems": []
+   },
+   {
+    "scene": "en-office",
+    "cat": "time",
+    "source": "The train leaves at a quarter to nine.",
+    "translation": "Tàu sẽ khởi hành lúc 8 giờ 45 sáng.",
+    "problems": []
+   },
+   {
+    "scene": "en-office",
+    "cat": "idiom",
+    "source": "By the way, the deadline was moved to next Friday.",
+    "translation": "À, đúng rồi, thời hạn đã được lùi đến thứ Sáu tới tuần này.",
+    "problems": []
+   },
+   {
+    "scene": "en-office",
+    "cat": "negation",
+    "source": "It's not that I don't trust you.",
+    "translation": "Không phải là tôi không tin cậu.",
+    "problems": []
+   },
+   {
+    "scene": "en-office",
+    "cat": "negation",
+    "source": "Nobody told me the office was closed yesterday.",
+    "translation": "Không ai bảo tôi văn phòng đóng cửa hôm qua cả.",
+    "problems": []
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "We sold twelve hundred tickets, not twelve thousand.",
+    "translation": "Chúng ta bán được một ngàn hai trăm vé, chứ không phải một vạn hai nghìn.",
+    "problems": []
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "Half of the fifty guests have already left.",
+    "translation": "Một nửa trong số năm mươi vị khách đã rời đi rồi.",
+    "problems": []
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "It costs two and a half million dong.",
+    "translation": "Nó tốn hai triệu rưỡi.",
+    "problems": []
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "time",
+    "source": "I'll be back in fifteen minutes at most.",
+    "translation": "Tớ sẽ quay lại sau mười lăm phút nữa thôi.",
+    "problems": [
+     "thiếu: tối đa|nhiều nhất|không quá|cùng lắm|lâu nhất|chậm nhất|muộn nhất"
+    ]
+   },
+   {
+    "scene": "en-numbers",
+    "cat": "quantity",
+    "source": "Only three of us passed the exam.",
+    "translation": "Chỉ có ba người trong chúng ta đỗ kỳ thi.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "Mr. Thompson, this is my colleague Mai Anh.",
+    "translation": "Ông Thompson, đây là đồng nghiệp của tôi, Mai Anh.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "Mai Anh has just moved here from Da Nang.",
+    "translation": "Mai Anh vừa chuyển đến từ Đà Nẵng thôi ạ.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "Nice to meet you. Please call me David.",
+    "translation": "Rất vui được làm quen. Mọi người cứ gọi tôi là David nhé.",
+    "problems": []
+   },
+   {
+    "scene": "en-names",
+    "cat": "names",
+    "source": "David, could you show her the lab on the third floor?",
+    "translation": "David, cậu có thể đưa cô ấy xuống phòng thí nghiệm ở tầng ba không?",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "Break a leg tonight! You'll be great.",
+    "translation": "Chúc may mắn tối nay! Chắc chắn cậu sẽ làm tốt lắm.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "It's raining cats and dogs out there.",
+    "translation": "Trời mưa to như trút nước ngoài kia kìa.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "That exam was a piece of cake.",
+    "translation": "Bài kiểm tra vừa rồi dễ ợt luôn.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "Don't spill the beans about the surprise party.",
+    "translation": "Đừng tiết lộ bất cứ điều gì về bữa tiệc bất ngờ nhé.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "The old man finally kicked the bucket last winter.",
+    "translation": "Ông lão cuối cùng cũng qua đời vào mùa đông năm ngoái.",
+    "problems": []
+   },
+   {
+    "scene": "en-idioms",
+    "cat": "idiom",
+    "source": "Go on, I'm all ears.",
+    "translation": "Nói đi, tớ đang lắng nghe đây.",
+    "problems": []
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Mom, I'm home!",
+    "translation": "Mẹ ơi, con về!",
+    "problems": []
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Did you eat anything at school, son?",
+    "translation": "Con có ăn gì ở trường không?",
+    "problems": []
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Not yet. I'm starving.",
+    "translation": "Chưa đói quá.",
+    "problems": []
+   },
+   {
+    "scene": "en-family",
+    "cat": "address",
+    "source": "Then wash your hands. Dinner is ready.",
+    "translation": "Thì rửa tay đi. Bữa tối đã sẵn sàng.",
+    "problems": []
+   },
+   {
+    "scene": "zh-office",
+    "cat": "time",
+    "source": "会议还有不到半个小时就开始了。",
+    "translation": "Cuộc họp bắt đầu sau ít hơn nửa giờ nữa.",
+    "problems": []
+   },
+   {
+    "scene": "zh-office",
+    "cat": "negation",
+    "source": "我不是不想帮你，是真的没时间。",
+    "translation": "Tôi không phải là không muốn giúp, thật sự là tôi không có thời gian.",
+    "problems": []
+   },
+   {
+    "scene": "zh-office",
+    "cat": "names",
+    "source": "王经理让我们下午三点半去他办公室。",
+    "translation": "Quản lý Vương bảo chúng ta chiều ba giờ rưỡi đến văn phòng ông ấy.",
+    "problems": []
+   },
+   {
+    "scene": "zh-office",
+    "cat": "quantity",
+    "source": "这个项目我们已经做了一年多了。",
+    "translation": "Chúng ta đã làm dự án này được hơn một năm rồi.",
+    "problems": []
+   },
+   {
+    "scene": "zh-office",
+    "cat": "names",
+    "source": "小李，你把这份文件交给张老师。",
+    "translation": "Tiểu Lý, cậu cứ đưa bản tài liệu này cho cô giáo Trương.",
+    "problems": []
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "别担心，这件事对他来说是小菜一碟。",
+    "translation": "Đừng lo, chuyện này đối với anh ta là chuyện nhỏ.",
+    "problems": []
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "你这样做简直是画蛇添足。",
+    "translation": "Anh làm vậy chỉ tổ thêm rắc rối.",
+    "problems": [
+     "không khớp phương án nào: thừa | vẽ rắn thêm chân | không cần thiết"
+    ]
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "他一听到消息就马不停蹄地赶了过来。",
+    "translation": "Nghe tin xong, anh ta vội vàng đến ngay.",
+    "problems": []
+   },
+   {
+    "scene": "zh-idioms",
+    "cat": "idiom",
+    "source": "我们现在是骑虎难下了。",
+    "translation": "Bây giờ chúng ta đã vào đường rồi.",
+    "problems": [
+     "không khớp phương án nào: tiến thoái lưỡng nan | (cưỡi|ngồi) (trên )?lưng (hổ|cọp) | đâm lao"
+    ]
+   },
+   {
+    "scene": "zh-family",
+    "cat": "address",
+    "source": "妈，我回来了！",
+    "translation": "Mẹ ơi, con về rồi!",
+    "problems": []
+   },
+   {
+    "scene": "zh-family",
+    "cat": "time",
+    "source": "姐姐今天不回来吃饭，她要加班到九点。",
+    "translation": "Chị hôm nay không về ăn cơm, chị phải làm thêm đến chín giờ.",
+    "problems": []
+   },
+   {
+    "scene": "zh-family",
+    "cat": "address",
+    "source": "那你爸呢？他说过几点到家吗？",
+    "translation": "Còn bố thì sao? Ông ấy nói mấy giờ về tới nhà?",
+    "problems": []
+   },
+   {
+    "scene": "zh-family",
+    "cat": "negation",
+    "source": "他没说。不过他从来没有超过七点回来。",
+    "translation": "Ông ấy chưa nói. Nhưng ông nào cũng về trước bảy giờ cả.",
+    "problems": [
+     "thiếu: chưa (bao giờ|từng)|(không|chẳng) bao giờ"
+    ]
+   },
+   {
+    "scene": "zh-family",
+    "cat": "quantity",
+    "source": "我买了两斤苹果，一共才十五块钱。",
+    "translation": "Con mua hai cân táo, tổng cộng chỉ có mười lăm đồng thôi.",
+    "problems": []
+   }
+  ]
+ }
+}
