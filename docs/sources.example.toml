@@ -1,0 +1,13 @@
+# Danh sách kênh/studio ĐÃ CẤP PHÉP cho bạn dịch, lồng tiếng và phát hành lại.
+# Chép file này thành sources.toml ở thư mục chạy lệnh. Mỗi kênh bắt buộc có:
+#   permission – nội dung được phép, ai cấp, ngày nào
+#   evidence   – đường dẫn tới email/hợp đồng/ảnh chụp lưu kèm (tính từ vị trí file này)
+# Thiếu file bằng chứng thì kênh không được theo dõi.
+
+[[channel]]
+name = "Studio A"
+url = "https://www.youtube.com/@ten-kenh/videos"   # mọi URL kênh/playlist mà yt-dlp hỗ trợ
+attribution = "Studio A"
+language = "zh"
+permission = "Email ngày 2026-11-20 từ bà Lý (BD Studio A): cho phép dịch, lồng tiếng Việt, phát hành trên web và mạng xã hội tại Việt Nam, chia doanh thu 50/50, đến 2027-11-20"
+evidence = "permissions/studio-a-2026-11-20.pdf"

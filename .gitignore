@@ -9,3 +9,7 @@ out/
 *.mkv
 *.wav
 *.mp3
+library/
+sources.toml
+permissions/
+*.zip

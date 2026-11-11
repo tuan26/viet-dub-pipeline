@@ -41,6 +41,37 @@ xoá `out/work/clips/` rồi chạy lại để đọc lại theo bản đã s�
 | Giọng đọc | edge-tts (online), Piper (offline), beep (chạy thử) | `--tts`, `--voice` |
 | Nhạc nền | hạ nhỏ tiếng gốc, hoặc Demucs tách giọng | `--separate` |
 
+## Tự tìm và tải video
+
+Cài thêm `pip install -e '.[ingest]'`. Có hai hướng, chi tiết ở `specs/003-licensed-ingest/quickstart.md`:
+
+- **Nguồn giấy phép mở** — Internet Archive, Wikimedia Commons, YouTube Creative Commons. Chỉ giữ
+  CC0, phạm vi công cộng, CC-BY, CC-BY-SA. Mục tìm được phải được bạn duyệt trước khi tải.
+- **Kênh đã cấp phép** — khai báo kênh trong `sources.toml` kèm file bằng chứng cấp phép
+  (mẫu: `docs/sources.example.toml`; mẫu thư xin phép: `docs/outreach/permission-request.md`).
+
+```bash
+vietdub ingest search archive "short film" --limit 10
+```
+
+```bash
+vietdub ingest approve archive:<mã>
+```
+
+```bash
+vietdub ingest sync
+```
+
+```bash
+vietdub ingest fetch
+```
+
+```bash
+vietdub batch --lang zh
+```
+
+Không có trình tải cho trang phim bất kỳ: video chỉ vào thư viện qua hai hướng trên.
+
 ## Quyền sử dụng nội dung
 
 Công cụ chỉ chạy khi bạn khai báo `--license` và `--source`. Giấy phép được nhận:

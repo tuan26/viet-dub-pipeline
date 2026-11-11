@@ -38,7 +38,8 @@
 - [ ] T021 CI GitHub Actions chạy pytest
 
 ## Việc sau (tính năng riêng, cần spec mới)
-- 002: phân vai nhiều giọng (WhisperX + pyannote, mỗi nhân vật một giọng)
-- 003: nhập video từ nguồn được phép (Internet Archive, YouTube lọc CC-BY) kèm tự điền giấy phép
+- 002: dùng pyVideoTrans làm engine lồng tiếng thay engine tự viết
+- 007: phân vai nhiều giọng (WhisperX + pyannote, mỗi nhân vật một giọng)
+- 003: nhập video từ nguồn được phép — đã làm, xem `specs/003-licensed-ingest/`
 - 004: đọc phụ đề cứng bằng OCR
 - 005: xuất HLS và trang xem đơn giản

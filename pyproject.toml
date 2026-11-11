@@ -7,7 +7,7 @@ name = "vietdub"
 version = "0.1.0"
 description = "Tự động lồng tiếng Việt cho video bằng công cụ mã nguồn mở"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = { text = "MIT" }
 dependencies = []
 
@@ -15,6 +15,7 @@ dependencies = []
 asr = ["faster-whisper>=1.0"]
 tts = ["edge-tts>=6.1"]
 separate = ["demucs>=4.0"]
+ingest = ["yt-dlp"]
 dev = ["pytest>=8"]
 
 [project.scripts]
