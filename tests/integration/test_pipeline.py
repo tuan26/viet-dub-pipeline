@@ -95,3 +95,40 @@ def test_cli_end_to_end_with_vietnamese_subtitles(clip, tmp_path):
                      "--license", "owned", "--source", "test", "-o", str(tmp_path / "o")])
     assert code == 0
     assert (tmp_path / "o" / "clip.vi.mp4").exists()
+
+
+def test_batch_dubs_fetched_items_with_catalog_rights(clip, tmp_path, monkeypatch):
+    from vietdub.engines import asr
+    from vietdub.ingest.catalog import Catalog, Item
+    from vietdub.models import Segment
+
+    video, _ = clip
+    seen = {}
+
+    def fake_asr(audio, language, model):
+        seen["language"] = language
+        return [Segment(1, 0.5, 1.5, "Xin chào"), Segment(2, 2.0, 3.0, "♪♪"), Segment(3, 4.0, 5.0, "Tạm biệt")]
+
+    monkeypatch.setattr(asr, "transcribe", fake_asr)
+    lib = tmp_path / "lib"
+    cat = Catalog(lib)
+    cat.add(Item("archive:ok", "archive", "Ok", "https://archive.org/details/ok", "cc-by",
+                 attribution="Jane", language="chi", status="fetched", path=str(video)))
+    cat.add(Item("archive:gone", "archive", "Gone", "u", "cc0", status="fetched", path=str(tmp_path / "no.mp4")))
+    cat.add(Item("archive:waiting", "archive", "W", "u", "cc0", status="approved"))
+    cat.save()
+
+    code = cli.main(["batch", "--library", str(lib), "--tts", "beep", "--translator", "none"])
+
+    assert code == 1  # one item failed, the other still finished
+    after = Catalog(lib)
+    assert after.get("archive:ok").status == "dubbed"
+    assert after.get("archive:gone").status == "failed" and after.get("archive:gone").error
+    assert after.get("archive:waiting").status == "approved"
+    assert seen["language"] == "zh"
+    out = lib / "dubbed" / "archive_ok"
+    assert (out / "clip.vi.mp4").exists()
+    assert "Jane" in (out / "CREDITS.txt").read_text(encoding="utf-8")
+    report = json.loads((out / "report.json").read_text(encoding="utf-8"))
+    assert report["segments"] == 2  # the music-only line is skipped
+    assert "text_to_speech" in report["stage_seconds"] and report["output_bytes"] > 0

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import time
 from pathlib import Path
 from typing import Callable
 
@@ -10,20 +11,30 @@ from ..models import VietdubError
 SynthFn = Callable[[str, Path], Path]  # (text, path without suffix) -> written audio file
 
 
-def edge(voice: str = "vi-VN-HoaiMyNeural") -> SynthFn:
+def edge(voice: str = "vi-VN-HoaiMyNeural", retries: int = 4, pause: float = 1.5) -> SynthFn:
     """Microsoft Edge online voices via the unofficial edge-tts package (needs internet)."""
     try:
         import edge_tts
     except ImportError:
         raise VietdubError("Chưa cài edge-tts. Chạy: pip install 'vietdub[tts]' — hoặc dùng --tts piper.")
     import asyncio
+    import os
+
+    # aiohttp ignores proxy environment variables unless told, so pass it explicitly.
+    proxy = os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy")
 
     def synth(text: str, stem: Path) -> Path:
         out = stem.with_suffix(".mp3")
-        try:
-            asyncio.run(edge_tts.Communicate(text, voice).save(str(out)))
-        except Exception as exc:  # the library raises many network error types
-            raise VietdubError(f"edge-tts lỗi khi đọc câu {text!r}: {exc}")
+        # The service drops a request now and then ("No audio was received"); retrying succeeds.
+        for attempt in range(1, retries + 1):
+            try:
+                asyncio.run(edge_tts.Communicate(text, voice, proxy=proxy).save(str(out)))
+                return out
+            except Exception as exc:  # the library raises many network error types
+                out.unlink(missing_ok=True)
+                if attempt == retries:
+                    raise VietdubError(f"edge-tts lỗi khi đọc câu {text!r} sau {retries} lần thử: {exc}")
+                time.sleep(pause * attempt)
         return out
 
     return synth

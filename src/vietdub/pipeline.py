@@ -51,6 +51,11 @@ def run(job: Job) -> Path:
     clips_dir = work / "clips"
     clips_dir.mkdir(parents=True, exist_ok=True)
     started = time.time()
+    stages: dict[str, float] = {}
+
+    def timed(name: str, since: float) -> None:
+        stages[name] = round(stages.get(name, 0.0) + time.time() - since, 2)
+
     total = media.duration(job.video)
     job.log(f"Video dài {total:.1f}s")
 
@@ -59,7 +64,9 @@ def run(job: Job) -> Path:
     video_has_audio = media.has_audio(job.video)
     if video_has_audio and (job.force or not audio.exists()):
         job.log("[1/6] Tách âm thanh")
+        t = time.time()
         media.extract_audio(job.video, audio)
+        timed("extract_audio", t)
 
     # 2. Segments
     seg_file = work / "segments.json"
@@ -73,7 +80,9 @@ def run(job: Job) -> Path:
         if job.transcribe is None or not video_has_audio:
             raise VietdubError("Video không có phụ đề (--srt) và không có bộ nhận dạng giọng nói.")
         job.log("[2/6] Nhận dạng lời thoại")
+        t = time.time()
         segments = job.transcribe(audio)
+        timed("speech_to_text", t)
         _save(seg_file, segments)
     segments = [s for s in segments if s.start < total]
 
@@ -84,10 +93,18 @@ def run(job: Job) -> Path:
                 s.translation = s.text
         else:
             job.log(f"[3/6] Dịch {len(segments)} câu sang tiếng Việt")
+            t = time.time()
             translate(segments, job.chat, job.source_language, job.glossary)
+            timed("translate", t)
         _save(seg_file, segments)
 
+    # Lines with nothing to pronounce (music notes, punctuation) are left silent.
+    segments = [s for s in segments if any(c.isalnum() for c in s.translation)]
+    if not segments:
+        raise VietdubError("Không có câu thoại nào để lồng tiếng.")
+
     # 4. Voice
+    t = time.time()
     job.log(f"[4/6] Tạo giọng đọc cho {len(segments)} câu")
     raw: list[Path] = []
     for seg in segments:
@@ -97,7 +114,10 @@ def run(job: Job) -> Path:
         else:
             raw.append(job.synth(seg.translation, clips_dir / f"{seg.index:05d}_raw"))
 
+    timed("text_to_speech", t)
+
     # 5. Timing and dub track
+    t = time.time()
     job.log("[5/6] Khớp thời lượng và ghép đường tiếng")
     placements = timing.plan(segments, [media.duration(p) for p in raw], total, job.max_speed)
     fitted = []
@@ -108,6 +128,7 @@ def run(job: Job) -> Path:
         fitted.append((placement, out))
     dub = work / "dub.wav"
     media.assemble(fitted, total, dub)
+    timed("fit_and_assemble", t)
 
     # 6. Mix and write outputs
     job.log("[6/6] Trộn tiếng và xuất video")
@@ -117,12 +138,16 @@ def run(job: Job) -> Path:
             background = work / "background.wav"
             if job.force or not background.exists():
                 job.log("      Tách nhạc nền khỏi giọng gốc")
+                t = time.time()
                 background = job.separate(audio, work)
+                timed("separate_background", t)
             bed = background
         else:
             bed, bed_volume = audio, job.original_volume
     output = job.out_dir / f"{job.video.stem}.vi.mp4"
+    t = time.time()
     media.mux(job.video, bed, dub, output, bed_volume)
+    timed("mix_and_export", t)
 
     (job.out_dir / f"{job.video.stem}.vi.srt").write_text(
         srt.write_srt(segments, translated=True), encoding="utf-8"
@@ -139,6 +164,8 @@ def run(job: Job) -> Path:
         "max_speed_used": max((p.speed for p in sped), default=1.0),
         "truncated": [p.index for p in placements if p.truncated],
         "background": "separated" if job.separate and video_has_audio else "ducked-original",
+        "stage_seconds": stages,
+        "output_bytes": output.stat().st_size,
         "elapsed_seconds": round(time.time() - started, 1),
     }
     (job.out_dir / "report.json").write_text(

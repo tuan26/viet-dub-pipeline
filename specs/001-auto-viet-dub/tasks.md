@@ -26,7 +26,7 @@
 
 ## Phase 6: US3 — Nhận dạng lời thoại (P2)
 - [x] T015 [US3] `src/vietdub/engines/asr.py` (faster-whisper)
-- [ ] T016 [US3] Chạy thử trên video có lời thoại thật và ghi kết quả vào research.md
+- [x] T016 [US3] Chạy thử nhận dạng thật (clip tự tạo); kết quả ở `docs/e2e-verification.md`
 
 ## Phase 7: US4 — Giữ nhạc nền (P3)
 - [x] T017 [US4] `src/vietdub/engines/separate.py` (Demucs)
@@ -34,7 +34,7 @@
 
 ## Phase 8: Polish
 - [x] T019 README, quickstart
-- [ ] T020 Chạy thử edge-tts và Ollama/Gemini thật trên máy có mạng
+- [x] T020 Chạy thật edge-tts và model dịch chạy máy; Gemini và Ollama chính hãng chưa chạy
 - [ ] T021 CI GitHub Actions chạy pytest
 
 ## Việc sau (tính năng riêng, cần spec mới)

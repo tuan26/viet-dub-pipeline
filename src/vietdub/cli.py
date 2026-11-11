@@ -65,6 +65,19 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
+_LANG = {"eng": "en", "chi": "zh", "zho": "zh", "cmn": "zh", "jpn": "ja", "kor": "ko", "fra": "fr",
+         "fre": "fr", "deu": "de", "ger": "de", "spa": "es", "rus": "ru", "tha": "th",
+         "english": "en", "chinese": "zh", "japanese": "ja", "korean": "ko"}
+
+
+def _language(code: str) -> str | None:
+    """Catalog languages come as 'eng', 'English', 'zh'...; whisper wants two letters."""
+    code = code.strip().lower()
+    if len(code) == 2:
+        return code
+    return _LANG.get(code)  # unknown: let speech recognition detect it
+
+
 def _job(args: argparse.Namespace, video: Path, out: Path, rights: Rights, srt: Path | None,
          language: str | None):
     from . import pipeline
@@ -129,7 +142,7 @@ def _batch(args: argparse.Namespace) -> int:
             source = item.page_url + (f" — {item.permission}" if item.permission else "")
             rights = check_rights(item.license, source, item.attribution)
             job = _job(args, Path(item.path), args.library / "dubbed" / item.slug(), rights, None,
-                       args.lang or item.language[:2] or None)
+                       args.lang or _language(item.language))
             _summary(job, pipeline.run(job))
             item.status, item.error = "dubbed", ""
         except VietdubError as exc:
