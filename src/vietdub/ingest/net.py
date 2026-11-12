@@ -9,7 +9,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-from ..models import VietdubError
+from ..models import TransientError, VietdubError
 
 USER_AGENT = os.environ.get("VIETDUB_USER_AGENT", "vietdub/0.1 (video ingest tool)")
 DELAY = float(os.environ.get("VIETDUB_REQUEST_DELAY", "1.0"))
@@ -27,9 +27,10 @@ def _open(url: str):
         return urllib.request.urlopen(req, timeout=60)
     except urllib.error.HTTPError as exc:
         hint = " (nguồn đang giới hạn tần suất, thử lại sau)" if exc.code == 429 else ""
-        raise VietdubError(f"{urllib.parse.urlsplit(url).netloc} trả về HTTP {exc.code}{hint}")
+        kind = TransientError if exc.code in (408, 425, 429) or exc.code >= 500 else VietdubError
+        raise kind(f"{urllib.parse.urlsplit(url).netloc} trả về HTTP {exc.code}{hint}")
     except urllib.error.URLError as exc:
-        raise VietdubError(f"Không kết nối được {urllib.parse.urlsplit(url).netloc}: {exc.reason}")
+        raise TransientError(f"Không kết nối được {urllib.parse.urlsplit(url).netloc}: {exc.reason}")
 
 
 def get_json(url: str, params: dict | list) -> dict:

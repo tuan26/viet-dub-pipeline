@@ -17,6 +17,7 @@ tts = ["edge-tts>=6.1"]
 separate = ["demucs>=4.0"]
 ingest = ["yt-dlp"]
 speakers = ["sherpa-onnx", "numpy"]
+auto = ["psycopg[binary]>=3.1"]
 dev = ["pytest>=8"]
 
 [project.scripts]

@@ -54,6 +54,29 @@ def build_parser() -> argparse.ArgumentParser:
     b = sub.add_parser("batch", parents=[engines, lib], help="Lồng tiếng mọi video đã tải trong thư viện")
     b.add_argument("--limit", type=int, default=10)
 
+    auto = sub.add_parser("auto", help="Luồng tự động: nguồn → tải → lồng tiếng → kiểm tra → chờ duyệt")
+    asub = auto.add_subparsers(dest="action", required=True)
+    cfg = argparse.ArgumentParser(add_help=False)
+    cfg.add_argument("--config", type=Path, default=Path("pipeline.toml"))
+    ar = asub.add_parser("run", parents=[cfg], help="Chạy một vòng, hoặc lặp lại theo chu kỳ")
+    ar.add_argument("--every", type=float, metavar="PHÚT", help="Lặp lại sau mỗi số phút này (mặc định: chạy một vòng)")
+    ar.add_argument("--dry-run", action="store_true", help="Chỉ xem sẽ tìm thấy gì; không ghi, không tải, không lồng tiếng")
+    ar.add_argument("--worker", default="worker-1", help="Tên tiến trình, khi chạy nhiều worker song song")
+    asub.add_parser("status", parents=[cfg], help="Xem trạng thái mọi video")
+    for name, text in (("allow", "Xác nhận quyền sử dụng cho video đang chờ duyệt quyền"),
+                       ("deny", "Từ chối video đang chờ duyệt quyền"),
+                       ("approve", "Duyệt bản lồng tiếng (QC_PASS hoặc NEEDS_REVIEW) → READY"),
+                       ("reject", "Loại bản lồng tiếng"), ("redo", "Lồng tiếng lại từ video đã tải"),
+                       ("retry", "Đưa video FAILED trở lại hàng đợi")):
+        a = asub.add_parser(name, parents=[cfg], help=text)
+        a.add_argument("ids", nargs="+")
+        if name in ("allow", "approve"):
+            a.add_argument("--note", required=True, help="Căn cứ duyệt (ai duyệt, dựa trên gì); được lưu vào nhật ký")
+    ad = asub.add_parser("dashboard", parents=[cfg], help="Ghi trang trạng thái HTML")
+    ad.add_argument("--out", type=Path, default=Path("dashboard.html"))
+    al = asub.add_parser("log", parents=[cfg], help="Xem nhật ký của một video")
+    al.add_argument("id")
+
     ing = sub.add_parser("ingest", help="Tìm và tải video từ nguồn được phép")
     isub = ing.add_subparsers(dest="action", required=True)
     s = isub.add_parser("search", parents=[lib], help="Tìm video có giấy phép cho phép lồng tiếng")
@@ -245,10 +268,68 @@ def _ingest(args: argparse.Namespace) -> int:
     return 0
 
 
+# action -> (states it applies to, new state)
+_MOVES = {"allow": (("AWAITING_RIGHTS",), "APPROVED"), "deny": (("AWAITING_RIGHTS",), "REJECTED"),
+          "approve": (("QC_PASS", "NEEDS_REVIEW"), "READY"), "reject": (("QC_PASS", "NEEDS_REVIEW", "READY"), "REJECTED"),
+          "redo": (("QC_PASS", "NEEDS_REVIEW", "READY", "FAILED"), "DOWNLOADED"),
+          "retry": (("FAILED",), None)}
+
+
+def _auto(args: argparse.Namespace) -> int:
+    import json
+    import time
+
+    from .auto import config as auto_config
+    from .auto import dashboard, orchestrator
+    from .auto.store import Store
+
+    cfg = auto_config.load(args.config)
+    store = Store(cfg.database)
+    if args.action == "run":
+        while True:
+            summary = orchestrator.run_once(cfg, store, args.worker, args.dry_run)
+            d = summary["discover"]
+            print(f"Vòng chạy: {d['new']} video mới ({d['awaiting_rights']} chờ duyệt quyền), {summary['processed']} bước xử lý, "
+                  f"{summary['recovered']} video khôi phục. Kết quả: {summary['states'] or 'không có'}")
+            if not args.every or args.dry_run:
+                return 0
+            time.sleep(args.every * 60)
+    if args.action == "status":
+        for v in store.videos():
+            qc = "; ".join(json.loads(v["qc"]).get("reasons", [])) if v["qc"] else ""
+            print(f"{v['state']:15s} {v['id']}  [{v['license']}]  {v['title']}" + (f"\n{'':15s} ! {qc or v['error']}" if qc or v["error"] else ""))
+        waiting = len(store.videos("AWAITING_RIGHTS")), len(store.videos("NEEDS_REVIEW")), len(store.videos("QC_PASS"))
+        print(f"{len(store.videos())} video. Chờ duyệt quyền: {waiting[0]}. Cần xem lại: {waiting[1]}. Đạt kiểm tra, chờ duyệt: {waiting[2]}.")
+        return 0
+    if args.action == "dashboard":
+        print(f"Đã ghi {dashboard.write(store, args.out)}")
+        return 0
+    if args.action == "log":
+        for ev in reversed(store.events(args.id, 200)):
+            took = f" ({ev['seconds']:.0f}s)" if ev["seconds"] and ev["level"] != "done" else ""
+            print(f"{time.strftime('%m-%d %H:%M:%S', time.localtime(ev['ts']))} {ev['stage']:9s} {ev['level']:7s} {ev['message']}{took}")
+        return 0
+    allowed, target = _MOVES[args.action]
+    for video_id in args.ids:
+        video = store.get(video_id)
+        if video["state"] not in allowed:
+            raise VietdubError(f"{video_id} đang ở trạng thái {video['state']}; lệnh '{args.action}' chỉ dùng cho: {', '.join(allowed)}.")
+        if args.action == "retry":
+            target_state = "DOWNLOADED" if video["path"] and Path(video["path"]).exists() else "APPROVED"
+            store.release(video_id, target_state, attempts=0, next_attempt_at=0, error=None)
+        elif args.action == "redo":
+            store.release(video_id, target, attempts=0, next_attempt_at=0, error=None, qc=None)
+        else:
+            store.release(video_id, target)
+        store.log(video_id, "human", "info", f"{args.action}: {getattr(args, 'note', '') or ''}".strip())
+        print(f"{video_id} → {store.get(video_id)['state']}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        return {"run": _run, "batch": _batch, "ingest": _ingest}[args.command](args)
+        return {"run": _run, "batch": _batch, "ingest": _ingest, "auto": _auto}[args.command](args)
     except ReviewNeeded as stop:
         print(f"\nĐã dừng để bạn duyệt vai. Mở thư mục: {stop}\n"
               "  1. Nghe các file .wav của từng người nói.\n"

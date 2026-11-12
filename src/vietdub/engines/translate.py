@@ -9,7 +9,7 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Callable
 
-from ..models import Segment, VietdubError
+from ..models import Segment, TransientError, VietdubError
 
 PRESETS = {
     # name: (base_url, default model, env var holding the API key or None)
@@ -71,7 +71,7 @@ class ChatConfig:
                 data = json.load(resp)
             return data["choices"][0]["message"]["content"]
         except (urllib.error.URLError, KeyError, IndexError, ValueError) as exc:
-            raise VietdubError(f"Gọi bộ dịch tại {self.base_url} thất bại: {exc}")
+            raise TransientError(f"Gọi bộ dịch tại {self.base_url} thất bại: {exc}")
 
 
 def _parse_list(reply: str, expected: int) -> list[str] | None:

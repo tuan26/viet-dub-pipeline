@@ -39,5 +39,9 @@ class VietdubError(Exception):
     """An error the user can act on; the CLI prints it without a traceback."""
 
 
+class TransientError(VietdubError):
+    """A failure worth retrying later: a network call or an online service that did not answer."""
+
+
 class ReviewNeeded(VietdubError):
     """The run stopped on purpose so a person can check speakers and voices."""

@@ -1,0 +1,67 @@
+# Cấu hình luồng tự động. Chép thành pipeline.toml rồi chạy: vietdub auto run
+# Mọi đường dẫn tính từ vị trí file này.
+
+[storage]
+database = "postgresql://vietdub@127.0.0.1:5432/vietdub"   # bỏ dòng này để dùng SQLite trong thư mục library
+library = "library"
+
+[limits]
+max_attempts = 3          # số lần thử cho lỗi tạm thời (mạng, dịch vụ không trả lời)
+retry_minutes = 10        # lần thử lại đầu sau 10 phút, sau đó gấp đôi
+stale_minutes = 180       # video bị worker bỏ dở quá lâu thì trả về hàng đợi
+min_free_gb = 5           # không tải khi đĩa còn ít hơn mức này
+min_free_ram_gb = 2       # không lồng tiếng khi RAM trống ít hơn mức này
+max_video_minutes = 60
+max_download_mb = 2000
+daily_minutes = 600       # tổng số phút video được lồng tiếng mỗi ngày
+max_items_per_run = 20
+
+[dubbing]
+asr_model = "small"
+translator = "ollama"
+tts = "edge"
+separate = true
+speakers = "auto"
+speaker_model = "models/3dspeaker_speech_eres2net_sv_en_voxceleb_16k.onnx"
+
+[qc]
+max_missed_speech_ratio = 0.15   # phần tiếng người không thuộc câu thoại nào
+max_untranslated = 0
+max_truncated_ratio = 0.05
+max_uncertain_ratio = 0.2
+require_speaker_review = true    # vai do máy tự gán thì luôn cần người xem lại
+
+# --- Nguồn. rights = "verified" chỉ được chấp nhận khi có căn cứ: license = "owned" hoặc file evidence.
+# Mọi nguồn khác dừng ở trạng thái AWAITING_RIGHTS cho tới khi bạn chạy: vietdub auto allow <id> --note "..."
+
+[[source]]
+name = "video-cua-toi"
+type = "folder"                  # các file video có sẵn trên máy
+path = "videos"
+license = "owned"
+language = "zh"
+rights = "verified"
+
+[[source]]
+name = "studio-a"
+type = "channel"                 # kênh/playlist mà yt-dlp đọc được, đã cấp phép cho bạn
+url = "https://www.youtube.com/@ten-kenh/videos"
+attribution = "Studio A"
+language = "zh"
+permission = "Email 2026-11-20: cho phép dịch, lồng tiếng, phát hành tại Việt Nam đến 2027-11-20"
+evidence = "permissions/studio-a-2026-11-20.pdf"
+rights = "verified"
+interval_minutes = 360
+limit = 20
+
+[[source]]
+name = "danh-sach-file"
+type = "manifest"                # danh sách URL file trực tiếp, xem docs/manifest.example.toml
+file = "videos.toml"
+
+[[source]]
+name = "archive-phim-ngan"
+type = "archive"                 # cũng có: commons, youtube_cc — giấy phép tự khai nên luôn chờ duyệt
+query = "short film"
+limit = 5
+interval_minutes = 1440

@@ -1,0 +1,8 @@
+# Danh sách file video tải trực tiếp cho nguồn type = "manifest".
+[[video]]
+url = "https://example.org/phim/tap-01.mp4"
+title = "Tập 1"
+license = "licensed"             # owned, licensed, public-domain, cc0, cc-by, cc-by-sa
+attribution = "Studio A"
+language = "zh"
+permission = "Hợp đồng số 12/2026"

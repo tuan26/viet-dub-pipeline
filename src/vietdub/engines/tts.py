@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from typing import Callable
 
-from ..models import VietdubError
+from ..models import TransientError, VietdubError
 
 SynthFn = Callable[[str, Path], Path]  # (text, path without suffix) -> written audio file
 
@@ -34,7 +34,7 @@ def edge(voice: str = "vi-VN-HoaiMyNeural", retries: int = 4, pause: float = 1.5
             except Exception as exc:  # the library raises many network error types
                 out.unlink(missing_ok=True)
                 if attempt == retries:
-                    raise VietdubError(f"edge-tts lỗi khi đọc câu {text!r} sau {retries} lần thử: {exc}")
+                    raise TransientError(f"edge-tts lỗi khi đọc câu {text!r} sau {retries} lần thử: {exc}")
                 time.sleep(pause * attempt)
         return out
 

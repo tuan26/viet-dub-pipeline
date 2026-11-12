@@ -67,6 +67,36 @@ Gán vai tự động đúng khoảng 89% số câu trên ba clip thử (nhãn n
 `--review` trước khi phát hành. Số đo: `docs/evaluation-2026-11-12.md` và `docs/quality-evaluation.md`.
 Model dịch mặc định là `gemma3:12b` (35/39 trên bộ test dịch, so với 18/39 của `qwen2.5:7b`); cần khoảng 14 GB RAM.
 
+## Luồng tự động
+
+Khai báo nguồn và giới hạn trong `pipeline.toml` (mẫu: `docs/pipeline.example.toml`), rồi:
+
+```bash
+pip install -e '.[asr,tts,speakers,separate,ingest,auto]'
+```
+
+```bash
+vietdub auto run --dry-run
+```
+
+```bash
+vietdub auto run --every 60
+```
+
+Mỗi vòng: kiểm tra các nguồn đến hạn → tải video mới → lồng tiếng → kiểm tra chất lượng → dừng chờ người duyệt.
+
+| Trạng thái | Nghĩa | Lệnh của bạn |
+|---|---|---|
+| `AWAITING_RIGHTS` | Nguồn chưa có căn cứ về quyền sử dụng | `vietdub auto allow <id> --note "căn cứ"` hoặc `deny` |
+| `NEEDS_REVIEW` | Kiểm tra tự động thấy điểm cần xem (lý do trong `auto status`) | `approve --note`, `reject`, `redo` |
+| `QC_PASS` | Qua mọi phép kiểm, vẫn chờ bạn duyệt | `approve --note`, `reject` |
+| `READY` | Bạn đã duyệt bản lồng tiếng | — (chưa có chức năng đăng) |
+| `FAILED` | Lỗi không tự khắc phục được, hoặc đã thử lại đủ số lần | `retry` sau khi xử lý nguyên nhân |
+| `DUPLICATE` | Trùng nội dung với video khác | — |
+
+`vietdub auto status`, `vietdub auto log <id>` và `vietdub auto dashboard` (ghi `dashboard.html`) cho biết chuyện gì đang xảy ra.
+Hệ thống chưa đăng gì lên nền tảng nào; hiện trạng so với mục tiêu ở `docs/roadmap-gap-analysis.md`.
+
 ## Tự tìm và tải video
 
 Cài thêm `pip install -e '.[ingest]'`. Có hai hướng, chi tiết ở `specs/003-licensed-ingest/quickstart.md`:
