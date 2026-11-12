@@ -231,6 +231,7 @@ def run(job: Job) -> Path:
         "output": output.name,
         "rights": job.rights.to_dict(),
         "duration_seconds": round(total, 2),
+        "video_stream_seconds": round(media.video_duration(job.video), 2),
         "segments": len(segments),
         "sped_up": len(sped),
         "max_speed_used": max((p.speed for p in sped), default=1.0),

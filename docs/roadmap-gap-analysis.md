@@ -1,5 +1,7 @@
 # Gap analysis: hiện trạng so với hệ thống tự động mục tiêu (2026-11-12)
 
+Diễn biến và số đo của lần chạy thật: `docs/auto-e2e-2026-11-12.md`.
+
 Luồng mục tiêu: Auto Crawler → Download/Ingest → AI Dubbing → Automated QC → Optional Human Review →
 Video Processing → Publish YouTube/Facebook/TikTok.
 
@@ -16,7 +18,7 @@ Cột "Kiểm chứng": **thật** = đã chạy với dữ liệu và dịch v�
 | 4. Tải và đưa vào hàng đợi | Tải tay | Hàng đợi trạng thái trong PostgreSQL | Tải trực tiếp: thật. Qua yt-dlp: chưa |
 | 5. Tự gọi pipeline lồng tiếng | `batch` chạy tay | Bước `dub` gọi engine hiện có, không sửa engine | Thật |
 | 6. Trạng thái, log, thời gian, lỗi | `catalog.json`, `report.json` | Bảng `videos`, `events`, `sources` | Thật |
-| 7. Retry, resume, tránh xử lý trùng | Resume trong một video | Lỗi tạm thời thử lại có giãn cách; lỗi vĩnh viễn dừng ngay; nhận việc nguyên tử; khôi phục việc bỏ dở | Tránh trùng: thật. Retry/khôi phục: test |
+| 7. Retry, resume, tránh xử lý trùng | Resume trong một video | Lỗi tạm thời thử lại có giãn cách; lỗi vĩnh viễn dừng ngay; nhận việc nguyên tử; khôi phục việc bỏ dở | Tránh trùng, dừng ngay khi lỗi vĩnh viễn, `auto retry`/`redo` tiếp tục từ kết quả cũ: thật. Thử lại tự động, khôi phục việc bỏ dở: test |
 | 8. Nguồn chưa xác minh phải chờ duyệt | Mục `found` chờ `approve` | `AWAITING_RIGHTS`; `rights = "verified"` bị từ chối nếu thiếu căn cứ | Thật |
 
 ## Phase 2 — Automated QC & Human Review

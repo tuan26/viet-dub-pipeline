@@ -62,7 +62,7 @@ def test_qc_flags_a_silent_or_untranslated_result(project):
     out = project / "library" / "dubbed" / "folder_mine_clip_mp4"
     report = json.loads((out / "report.json").read_text(encoding="utf-8"))
     report["untranslated"] = [1]
-    report["duration_seconds"] = 60.0
+    report["duration_seconds"] = report["video_stream_seconds"] = 60.0
     (out / "report.json").write_text(json.dumps(report), encoding="utf-8")
     result = qc.check(out, auto_config.QC)
     assert result["status"] == "NEEDS_REVIEW"

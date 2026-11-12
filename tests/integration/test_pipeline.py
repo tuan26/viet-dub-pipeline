@@ -231,3 +231,33 @@ def test_review_stops_before_any_voice_and_resumes_with_the_confirmed_cast(clip,
     job, output = run()
     assert output.exists() and job.report["speakers_reviewed"] is True
     assert [name for name, _ in used] == ["S1:male", "HERO:female", "S1:male"]
+
+
+def test_mix_of_loud_background_and_voice_does_not_clip(clip, tmp_path):
+    video, _ = clip
+    loud = tmp_path / "loud.wav"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "sine=frequency=300:duration=6", "-af", "volume=18dB", str(loud)], check=True)
+    out = tmp_path / "mixed.mp4"
+    media.mux(video, loud, loud, out, 1.0)
+    info = subprocess.run(["ffmpeg", "-v", "info", "-i", str(out), "-vn", "-af", "volumedetect", "-f", "null", "-"],
+                          capture_output=True, text=True).stderr
+    peak = float(info.split("max_volume: ")[1].split(" dB")[0])
+    assert peak <= -0.5
+
+
+def test_report_records_picture_length_for_sources_with_longer_audio(tmp_path):
+    video = tmp_path / "uneven.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "testsrc=duration=4:size=160x120:rate=10",
+                    "-f", "lavfi", "-i", "sine=frequency=220:duration=6", str(video)], check=True)
+    subs = tmp_path / "s.srt"
+    subs.write_text("1\n00:00:00,500 --> 00:00:01,500\nXin chào\n", encoding="utf-8")
+    job = pipeline.Job(video=video, out_dir=tmp_path / "out", rights=check_rights("owned", "test", None),
+                       synth=tts.beep(), subtitles=subs, log=lambda m: None)
+    output = pipeline.run(job)
+    assert abs(job.report["video_stream_seconds"] - 4.0) < 0.2 and job.report["duration_seconds"] > 5.5
+    assert abs(media.duration(output) - 4.0) < 0.3
+
+    from vietdub.auto import config as auto_config
+    from vietdub.auto import qc
+    checks = {c["name"]: c for c in qc.check(tmp_path / "out", auto_config.QC)["checks"]}
+    assert checks["thoi_luong"]["ok"]

@@ -60,7 +60,9 @@ def check(out_dir: Path, limits: dict) -> dict:
     info = json.loads(streams or "{}")
     kinds = {s.get("codec_type") for s in info.get("streams", [])}
     checks.append(_check("co_hinh_va_tieng", {"video", "audio"} <= kinds, sorted(kinds), ["audio", "video"]))
-    diff = abs(float(info.get("format", {}).get("duration", 0)) - report["duration_seconds"])
+    # the output is cut to the picture, so compare with the source's picture length
+    expected = report.get("video_stream_seconds") or report["duration_seconds"]
+    diff = abs(float(info.get("format", {}).get("duration", 0)) - expected)
     checks.append(_check("thoi_luong", diff <= limits["max_duration_diff"], round(diff, 2), limits["max_duration_diff"], "lệch so với video gốc (giây)"))
 
     # audio level

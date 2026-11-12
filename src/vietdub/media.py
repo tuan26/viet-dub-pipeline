@@ -33,6 +33,17 @@ def duration(path: Path) -> float:
         raise VietdubError(f"Không đọc được thời lượng của {path}.")
 
 
+def video_duration(path: Path) -> float:
+    """Length of the picture track; it can differ from the container length when the
+    source's audio runs longer than its video."""
+    out = _run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=duration",
+                "-of", "csv=p=0", str(path)]).strip()
+    try:
+        return float(out)
+    except ValueError:
+        return duration(path)
+
+
 def has_audio(path: Path) -> bool:
     out = _run(
         ["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=index",
@@ -96,7 +107,9 @@ def mux(video: Path, bed: Path | None, dub: Path, out: Path, bed_volume: float) 
             "-i", str(bed), "-i", str(dub),
             "-filter_complex",
             f"[1:a]volume={bed_volume}[b];[2:a]volume=1.0[d];"
-            "[b][d]amix=inputs=2:duration=longest:normalize=0[a]",
+            # amix adds the two tracks; the limiter keeps the sum from clipping, with headroom
+            # because AAC encoding overshoots a limited signal by about 1 dB (measured)
+            "[b][d]amix=inputs=2:duration=longest:normalize=0,alimiter=limit=0.8:level=false[a]",
             "-map", "0:v:0", "-map", "[a]",
         ]
     cmd += ["-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-shortest", str(out)]
