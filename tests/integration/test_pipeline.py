@@ -192,3 +192,42 @@ def test_line_that_does_not_fit_is_reworded_shorter(clip, tmp_path):
     pipeline.run(job)
     assert job.report["shortened"] == [2] and job.report["truncated"] == []
     assert "ngắn thôi" in (tmp_path / "out" / "clip.vi.srt").read_text(encoding="utf-8")
+
+
+def test_review_stops_before_any_voice_and_resumes_with_the_confirmed_cast(clip, tmp_path):
+    from vietdub.models import ReviewNeeded
+
+    used = []
+
+    def voice(name):
+        def synth(text, stem):
+            used.append((name, text))
+            return tts.beep()(text, stem)
+        return synth
+
+    def diarize(audio, segments):
+        for seg, who in zip(segments, ["S1", "S2", "S1"]):
+            seg.speaker = who
+        return {"S1": {"lines": 2, "suggested_gender": "female"}, "S2": {"lines": 1, "suggested_gender": "female"}}
+
+    def run():
+        job = make_job(clip, tmp_path, diarize=diarize, cast=lambda info: {s: voice(f"{s}:{d['gender']}") for s, d in info.items()}, review=True)
+        return job, pipeline.run(job)
+
+    with pytest.raises(ReviewNeeded):
+        run()
+    assert used == [] and not (tmp_path / "out" / "clip.vi.mp4").exists()
+
+    folder = tmp_path / "out" / "work" / "review"
+    assert len(list(folder.glob("S1_line*.wav"))) == 2
+    lines = (folder / "lines.tsv").read_text(encoding="utf-8").replace("\tS2\t", "\tHERO\t")
+    (folder / "lines.tsv").write_text(lines, encoding="utf-8")
+    cast = json.loads((folder / "cast.json").read_text(encoding="utf-8"))
+    cast["reviewed"] = True
+    cast["speakers"]["S1"]["gender"] = "male"
+    cast["speakers"]["HERO"] = {"gender": "female"}
+    (folder / "cast.json").write_text(json.dumps(cast), encoding="utf-8")
+
+    job, output = run()
+    assert output.exists() and job.report["speakers_reviewed"] is True
+    assert [name for name, _ in used] == ["S1:male", "HERO:female", "S1:male"]

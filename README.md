@@ -47,18 +47,24 @@ xoá `out/work/clips/` rồi chạy lại để đọc lại theo bản đã s�
 pip install -e '.[asr,tts,speakers,separate]'
 ```
 
-Tải model người nói (26 MB, CC-BY-4.0) về `models/voxceleb_resnet34_LM.onnx` từ
-https://huggingface.co/Wespeaker/wespeaker-voxceleb-resnet34-LM rồi:
+Tải model người nói (26 MB) về thư mục `models/`:
 
 ```bash
-vietdub run phim.mp4 --lang en --speakers --separate --license cc-by --source "https://..." --attribution "Tác giả"
+curl -L -o models/3dspeaker_speech_eres2net_sv_en_voxceleb_16k.onnx https://huggingface.co/csukuangfj/speaker-embedding-models/resolve/main/3dspeaker_speech_eres2net_sv_en_voxceleb_16k.onnx
+```
+
+```bash
+vietdub run phim.mp4 --lang en --separate --asr-model medium --speakers --review --license cc-by --source "https://..." --attribution "Tác giả"
 ```
 
 - `--speakers` gán mỗi người nói một giọng; thêm số (`--speakers 2`) nếu biết số nhân vật.
-- `--cast S1=male,S2=female` sửa giới tính giọng khi máy đoán sai (xem `speakers` trong `report.json`).
-- `--separate` dùng Demucs bỏ giọng gốc, giữ nhạc và hiệu ứng.
+- `--review` dừng trước khi tạo giọng và ghi `out/work/review/`: nghe các file `.wav`, sửa cột `speaker` trong
+  `lines.tsv`, điền `gender` hoặc `voice` cho từng người trong `cast.json`, đặt `"reviewed": true`, rồi chạy lại đúng lệnh đó.
+- Không có `--review` thì máy tự gán vai và chọn giọng theo gợi ý từ cao độ; báo cáo ghi rõ là chưa có người duyệt.
+- `--separate` dùng Demucs bỏ giọng gốc, giữ nhạc và hiệu ứng, và giúp nhận dạng lời thoại tốt hơn.
 
-Nhận diện người nói tự động chưa đủ tin cậy trên phim thật; số đo và giới hạn ở `docs/quality-evaluation.md`.
+Gán vai tự động đúng khoảng 89% số câu trên ba clip thử (nhãn nháp, chưa được người nghe xác nhận), nên nên dùng
+`--review` trước khi phát hành. Số đo: `docs/evaluation-2026-11-12.md` và `docs/quality-evaluation.md`.
 Model dịch mặc định là `gemma3:12b` (35/39 trên bộ test dịch, so với 18/39 của `qwen2.5:7b`); cần khoảng 14 GB RAM.
 
 ## Tự tìm và tải video

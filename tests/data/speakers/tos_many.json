@@ -1,0 +1,245 @@
+{
+ "clip": "tos_many",
+ "note": "Nhãn nháp: gán theo nội dung câu thoại, hiểu biết về phim và cao độ giọng; CHƯA được người nghe xác nhận. confidence=low nghĩa là không đủ căn cứ, bị loại khỏi phép đo.",
+ "timing_source": "official English subtitles",
+ "lines": [
+  {
+   "index": 1,
+   "start": 2.0,
+   "end": 5.0,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  },
+  {
+   "index": 2,
+   "start": 6.5,
+   "end": 8.0,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  },
+  {
+   "index": 3,
+   "start": 9.0,
+   "end": 11.0,
+   "speaker": "CELIA",
+   "confidence": "high"
+  },
+  {
+   "index": 4,
+   "start": 12.5,
+   "end": 15.0,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  },
+  {
+   "index": 5,
+   "start": 26.0,
+   "end": 27.0,
+   "speaker": "THOM",
+   "confidence": "high"
+  },
+  {
+   "index": 6,
+   "start": 28.0,
+   "end": 30.0,
+   "speaker": "THOM",
+   "confidence": "high"
+  },
+  {
+   "index": 7,
+   "start": 31.0,
+   "end": 33.0,
+   "speaker": "THOM",
+   "confidence": "high"
+  },
+  {
+   "index": 8,
+   "start": 35.0,
+   "end": 38.0,
+   "speaker": "THOM",
+   "confidence": "high"
+  },
+  {
+   "index": 9,
+   "start": 49.0,
+   "end": 51.0,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  },
+  {
+   "index": 10,
+   "start": 53.0,
+   "end": 54.0,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  },
+  {
+   "index": 11,
+   "start": 55.0,
+   "end": 56.0,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  },
+  {
+   "index": 12,
+   "start": 57.0,
+   "end": 60.0,
+   "speaker": "CELIA",
+   "confidence": "medium"
+  },
+  {
+   "index": 13,
+   "start": 66.0,
+   "end": 69.0,
+   "speaker": "THOM",
+   "confidence": "high"
+  },
+  {
+   "index": 14,
+   "start": 69.5,
+   "end": 71.0,
+   "speaker": "THOM",
+   "confidence": "high"
+  },
+  {
+   "index": 15,
+   "start": 71.0,
+   "end": 73.0,
+   "speaker": "THOM",
+   "confidence": "high"
+  },
+  {
+   "index": 16,
+   "start": 75.0,
+   "end": 76.0,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  },
+  {
+   "index": 17,
+   "start": 76.5,
+   "end": 78.5,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  },
+  {
+   "index": 18,
+   "start": 81.5,
+   "end": 82.5,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  },
+  {
+   "index": 19,
+   "start": 83.0,
+   "end": 84.0,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  },
+  {
+   "index": 20,
+   "start": 84.0,
+   "end": 85.0,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  },
+  {
+   "index": 21,
+   "start": 89.0,
+   "end": 90.0,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  },
+  {
+   "index": 22,
+   "start": 91.0,
+   "end": 93.0,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  },
+  {
+   "index": 23,
+   "start": 93.0,
+   "end": 95.0,
+   "speaker": "CELIA",
+   "confidence": "high"
+  },
+  {
+   "index": 24,
+   "start": 96.0,
+   "end": 97.0,
+   "speaker": "THOM",
+   "confidence": "high"
+  },
+  {
+   "index": 25,
+   "start": 97.0,
+   "end": 99.0,
+   "speaker": "CELIA",
+   "confidence": "high"
+  },
+  {
+   "index": 26,
+   "start": 99.0,
+   "end": 100.0,
+   "speaker": "THOM",
+   "confidence": "high"
+  },
+  {
+   "index": 27,
+   "start": 100.5,
+   "end": 103.0,
+   "speaker": "CELIA",
+   "confidence": "medium"
+  },
+  {
+   "index": 28,
+   "start": 106.0,
+   "end": 107.0,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  },
+  {
+   "index": 29,
+   "start": 117.0,
+   "end": 118.0,
+   "speaker": "THOM",
+   "confidence": "high"
+  },
+  {
+   "index": 30,
+   "start": 120.0,
+   "end": 121.0,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  },
+  {
+   "index": 31,
+   "start": 129.0,
+   "end": 130.5,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  },
+  {
+   "index": 32,
+   "start": 132.0,
+   "end": 133.0,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  },
+  {
+   "index": 33,
+   "start": 138.0,
+   "end": 139.5,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  },
+  {
+   "index": 34,
+   "start": 140.0,
+   "end": 141.0,
+   "speaker": "UNKNOWN",
+   "confidence": "low"
+  }
+ ]
+}

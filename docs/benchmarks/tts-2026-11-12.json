@@ -1,0 +1,26 @@
+{
+ "edge-HoaiMy": {
+  "lines": 10,
+  "failures": 0,
+  "synth_seconds_per_line": 0.51,
+  "realtime_factor": 0.21,
+  "syllables_per_second": 3.82,
+  "misheard_rate": 0.217
+ },
+ "edge-NamMinh": {
+  "lines": 10,
+  "failures": 0,
+  "synth_seconds_per_line": 0.94,
+  "realtime_factor": 0.42,
+  "syllables_per_second": 4.09,
+  "misheard_rate": 0.239
+ },
+ "piper-vi_VN-vais1000-medium": {
+  "lines": 10,
+  "failures": 0,
+  "synth_seconds_per_line": 2.09,
+  "realtime_factor": 1.05,
+  "syllables_per_second": 4.62,
+  "misheard_rate": 0.304
+ }
+}

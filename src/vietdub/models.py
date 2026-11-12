@@ -13,6 +13,7 @@ class Segment:
     text: str
     translation: str = ""
     speaker: str = ""
+    uncertain: bool = False  # the speaker label is a weak guess and should be checked
 
     @property
     def duration(self) -> float:
@@ -30,8 +31,13 @@ class Segment:
             text=data["text"],
             translation=data.get("translation", ""),
             speaker=data.get("speaker", ""),
+            uncertain=bool(data.get("uncertain", False)),
         )
 
 
 class VietdubError(Exception):
     """An error the user can act on; the CLI prints it without a traceback."""
+
+
+class ReviewNeeded(VietdubError):
+    """The run stopped on purpose so a person can check speakers and voices."""

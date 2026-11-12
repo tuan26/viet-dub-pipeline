@@ -8,10 +8,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
 
-from . import media, srt, timing
+from . import media, review, srt, timing
 from .engines.translate import ChatFn, shorten, translate
 from .engines.tts import SynthFn
-from .models import Segment, VietdubError
+from .models import ReviewNeeded, Segment, VietdubError
 from .rights import Rights
 
 
@@ -28,6 +28,7 @@ class Job:
     diarize: Callable[[Path, list[Segment]], dict[str, dict]] | None = None
     # Builds the voice of each speaker from that info.
     cast: Callable[[dict[str, dict]], dict[str, SynthFn]] | None = None
+    review: bool = False  # stop after speaker detection until a person confirms the cast
     subtitles: Path | None = None  # existing SRT; skips speech recognition
     source_language: str | None = None
     glossary: str = ""
@@ -55,10 +56,15 @@ def run(job: Job) -> Path:
     clips_dir = work / "clips"
     clips_dir.mkdir(parents=True, exist_ok=True)
     started = time.time()
+    # Kept on disk so a run that stops for review and resumes still reports every stage.
+    stages_file = work / "stages.json"
     stages: dict[str, float] = {}
+    if stages_file.exists() and not job.force:
+        stages = json.loads(stages_file.read_text(encoding="utf-8"))
 
     def timed(name: str, since: float) -> None:
         stages[name] = round(stages.get(name, 0.0) + time.time() - since, 2)
+        stages_file.write_text(json.dumps(stages), encoding="utf-8")
 
     total = media.duration(job.video)
     job.log(f"Video dài {total:.1f}s")
@@ -131,10 +137,17 @@ def run(job: Job) -> Path:
         else:
             job.log("      Nhận diện người nói")
             t = time.time()
-            speakers = job.diarize(speech, segments)
+            # the original mix: on the labelled clips embeddings were better on it than on separated vocals
+            speakers = job.diarize(audio, segments)
             timed("speakers", t)
             _save(seg_file, segments)
             speakers_file.write_text(json.dumps(speakers, ensure_ascii=False, indent=2), encoding="utf-8")
+        reviewed = False
+        if job.review:
+            reviewed, speakers = review.sync(work, segments, speakers, audio)
+            if not reviewed:
+                raise ReviewNeeded(str(work / "review"))
+            _save(seg_file, segments)
         voices = job.cast(speakers)
 
     # 4. Voice
@@ -223,6 +236,7 @@ def run(job: Job) -> Path:
         "max_speed_used": max((p.speed for p in sped), default=1.0),
         "truncated": [p.index for p in placements if p.truncated],
         "speakers": speakers,
+        "speakers_reviewed": bool(job.review and speakers),
         "shortened": shortened,
         "untranslated": json.loads((work / "untranslated.json").read_text()) if (work / "untranslated.json").exists() else [],
         "background": "separated" if job.separate and video_has_audio else "ducked-original",

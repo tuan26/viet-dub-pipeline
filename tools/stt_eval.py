@@ -1,9 +1,12 @@
-"""Word error rate of speech recognition against a reference subtitle file.
+"""Speech recognition against a reference subtitle file. Prints numbers only.
 
-    python tools/stt_eval.py clip.mp4 reference.srt --model small --lang en
-Prints numbers only (no transcript), so it is safe to run on any licensed material.
+    python tools/stt_eval.py audio_or_video reference.srt --model small --lang en [--no-vad]
+
+WER            word error rate over the whole clip
+missed         reference lines of which less than half the words were recognised nearby
+start_err      distance from each found reference line to the nearest recognised line start
 """
-import argparse, re, time
+import argparse, json, re, time
 from pathlib import Path
 
 from vietdub.engines.asr import transcribe
@@ -27,20 +30,32 @@ def wer(ref: list[str], hyp: list[str]) -> float:
     return d[-1] / max(len(ref), 1)
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("audio", type=Path); ap.add_argument("reference", type=Path)
-    ap.add_argument("--model", default="small"); ap.add_argument("--lang", default="en"); ap.add_argument("--label", default="")
-    a = ap.parse_args()
-    ref = parse_srt(a.reference.read_text(encoding="utf-8", errors="replace"))
-    t = time.time(); hyp = transcribe(a.audio, a.lang, a.model); elapsed = time.time() - t
-    r, h = words(" ".join(s.text for s in ref)), words(" ".join(s.text for s in hyp))
-    # start-time error: each reference line against the nearest recognised line start
-    offs = sorted(min(abs(x.start - y.start) for y in hyp) for x in ref)
-    print(f"{a.label or a.audio.name} model={a.model}: WER={wer(r, h):.3f} ref_words={len(r)} hyp_words={len(h)} "
-          f"ref_lines={len(ref)} hyp_lines={len(hyp)} start_err_median={offs[len(offs)//2]:.2f}s "
-          f"start_err_p90={offs[int(len(offs)*0.9)]:.2f}s time={elapsed:.1f}s")
+def missed_lines(ref, hyp, window: float = 1.5) -> list[int]:
+    out = []
+    for line in ref:
+        near = [w for h in hyp if h.end > line.start - window and h.start < line.end + window for w in words(h.text)]
+        want = words(line.text)
+        if want and sum(1 for w in want if w in near) < 0.5 * len(want):
+            out.append(line.index)
+    return out
+
+
+def evaluate(audio: Path, reference: Path, model: str, lang: str, vad: bool = True) -> dict:
+    ref = parse_srt(reference.read_text(encoding="utf-8", errors="replace"))
+    t = time.time(); hyp = transcribe(audio, lang, model, vad); elapsed = time.time() - t
+    missed = missed_lines(ref, hyp)
+    offs = sorted(min(abs(x.start - y.start) for y in hyp) for x in ref if x.index not in missed) or [0.0]
+    return {"wer": round(wer(words(" ".join(s.text for s in ref)), words(" ".join(s.text for s in hyp))), 3),
+            "ref_lines": len(ref), "hyp_lines": len(hyp), "missed": len(missed), "missed_indexes": missed,
+            "start_err_median": round(offs[len(offs) // 2], 2), "start_err_p90": round(offs[int(len(offs) * 0.9)], 2),
+            "seconds": round(elapsed, 1)}
 
 
 if __name__ == "__main__":
-    main()
+    ap = argparse.ArgumentParser()
+    ap.add_argument("audio", type=Path); ap.add_argument("reference", type=Path)
+    ap.add_argument("--model", default="small"); ap.add_argument("--lang", default="en")
+    ap.add_argument("--no-vad", action="store_true"); ap.add_argument("--label", default="")
+    a = ap.parse_args()
+    r = evaluate(a.audio, a.reference, a.model, a.lang, not a.no_vad)
+    print(json.dumps({"label": a.label or a.audio.name, "model": a.model, "vad": not a.no_vad, **r}))

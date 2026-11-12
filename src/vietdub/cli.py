@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 from . import __version__
-from .models import VietdubError
+from .models import ReviewNeeded, VietdubError
 from .rights import ALLOWED, Rights, check_rights
 
 
@@ -22,10 +22,12 @@ def _engine_options() -> argparse.ArgumentParser:
     e.add_argument("--voice", help="Giọng edge-tts (vd vi-VN-NamMinhNeural) hoặc file .onnx của Piper")
     e.add_argument("--speakers", nargs="?", const="auto", metavar="N",
                    help="Mỗi nhân vật một giọng; thêm số N nếu biết số nhân vật")
+    e.add_argument("--review", action="store_true",
+                   help="Dừng sau khi nhận diện người nói để bạn nghe, sửa và duyệt vai trước khi tạo giọng")
     e.add_argument("--cast", metavar="S1=male,S2=female",
                    help="Chỉ định giới tính giọng cho từng nhân vật khi máy đoán sai")
-    e.add_argument("--speaker-model", type=Path, default=Path("models/voxceleb_resnet34_LM.onnx"),
-                   help="File model người nói WeSpeaker (.onnx)")
+    e.add_argument("--speaker-model", type=Path, default=Path("models/3dspeaker_speech_eres2net_sv_en_voxceleb_16k.onnx"),
+                   help="File model người nói (.onnx, loại sherpa-onnx đọc được)")
     e.add_argument("--separate", action="store_true", help="Dùng Demucs giữ lại nhạc nền, bỏ giọng gốc")
     e.add_argument("--max-speed", type=float, default=1.4, help="Tăng tốc giọng đọc tối đa (mặc định 1.4)")
     e.add_argument("--force", action="store_true", help="Chạy lại mọi bước, bỏ qua kết quả đã lưu")
@@ -114,7 +116,7 @@ def _job(args: argparse.Namespace, video: Path, out: Path, rights: Rights, srt: 
             raise VietdubError("--speakers nhận một số nguyên dương, hoặc để trống để tự đếm.")
         from .engines import casting, diarize as dia
 
-        embed = dia.wespeaker(args.speaker_model)
+        embed = dia.embedder(args.speaker_model)
         count = None if args.speakers == "auto" else int(args.speakers)
 
         def diarize(audio: Path, segments):
@@ -131,10 +133,12 @@ def _job(args: argparse.Namespace, video: Path, out: Path, rights: Rights, srt: 
             for name, gender in forced.items():
                 if name in speakers:
                     speakers[name]["gender"] = gender
+            for info in speakers.values():
+                info["voice_basis"] = "người duyệt" if info.get("gender") or info.get("voice") else "máy gợi ý"
             return {s: tts.edge(v.name, pitch=v.pitch, rate=v.rate) for s, v in casting.cast(speakers).items()}
 
     return pipeline.Job(
-        diarize=diarize, cast=cast,
+        diarize=diarize, cast=cast, review=bool(args.review and args.speakers),
         video=video, out_dir=out, rights=rights, synth=tts.get(args.tts, args.voice), chat=chat,
         transcribe=transcribe, separate=separate, subtitles=srt, source_language=language,
         glossary=args.glossary.read_text(encoding="utf-8") if args.glossary else "",
@@ -147,6 +151,8 @@ def _summary(job, output: Path) -> None:
     print(f"Xong: {output}")
     print(f"  {rep['segments']} câu, {rep['sped_up']} câu phải tăng tốc, "
           f"{len(rep['truncated'])} câu bị cắt, {rep['elapsed_seconds']}s xử lý")
+    if rep.get("speakers") and not rep.get("speakers_reviewed"):
+        print("  Vai và giọng do máy tự gán, chưa có người duyệt (dùng --review để duyệt trước khi xuất).")
     if rep.get("untranslated"):
         print("  Câu bộ dịch chưa dịch được (cần sửa tay):", ", ".join(map(str, rep["untranslated"])))
     if rep["truncated"]:
@@ -171,7 +177,7 @@ def _batch(args: argparse.Namespace) -> int:
     if not todo:
         print("Không có video nào đã tải đang chờ lồng tiếng.")
         return 0
-    failed = 0
+    failed = waiting = 0
     for item in todo:
         print(f"\n== {item.id}: {item.title}")
         try:
@@ -181,12 +187,15 @@ def _batch(args: argparse.Namespace) -> int:
                        args.lang or _language(item.language))
             _summary(job, pipeline.run(job))
             item.status, item.error = "dubbed", ""
+        except ReviewNeeded as stop:
+            print(f"Chờ duyệt vai: {stop} (sửa lines.tsv, cast.json rồi chạy lại lệnh batch)")
+            waiting += 1
         except VietdubError as exc:
             item.status, item.error = "failed", str(exc)
             failed += 1
             print(f"Lỗi: {exc}", file=sys.stderr)
         catalog.save()
-    return 1 if failed else 0
+    return 1 if failed else 3 if waiting else 0
 
 
 def _ingest(args: argparse.Namespace) -> int:
@@ -240,6 +249,13 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return {"run": _run, "batch": _batch, "ingest": _ingest}[args.command](args)
+    except ReviewNeeded as stop:
+        print(f"\nĐã dừng để bạn duyệt vai. Mở thư mục: {stop}\n"
+              "  1. Nghe các file .wav của từng người nói.\n"
+              "  2. Sửa cột speaker (và translation nếu cần) trong lines.tsv; dấu ? là câu máy không chắc.\n"
+              "  3. Trong cast.json điền gender (male/female) hoặc voice cho từng người, đổi reviewed thành true.\n"
+              "  4. Chạy lại đúng lệnh này để tạo giọng và xuất video.")
+        return 3
     except VietdubError as exc:
         print(f"Lỗi: {exc}", file=sys.stderr)
         return 2

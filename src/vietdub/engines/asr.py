@@ -19,7 +19,7 @@ def split_on_pauses(words: list[tuple[float, float, str]], max_pause: float = 0.
     return [(g[0][0], g[-1][1], "".join(w[2] for w in g).strip()) for g in lines]
 
 
-def transcribe(audio: Path, language: str | None, model: str = "small") -> list[Segment]:
+def transcribe(audio: Path, language: str | None, model: str = "small", vad: bool = True) -> list[Segment]:
     """Speech-to-text with faster-whisper. ``language`` None means auto-detect."""
     try:
         from faster_whisper import WhisperModel
@@ -39,7 +39,7 @@ def transcribe(audio: Path, language: str | None, model: str = "small") -> list[
     samples = np.frombuffer(proc.stdout, np.int16).astype(np.float32) / 32768.0
 
     whisper = WhisperModel(model, device="auto", compute_type="auto")
-    result, _info = whisper.transcribe(samples, language=language, vad_filter=True, word_timestamps=True)
+    result, _info = whisper.transcribe(samples, language=language, vad_filter=vad, word_timestamps=True)
     lines: list[tuple[float, float, str]] = []
     for s in result:
         if not s.text.strip():

@@ -1,0 +1,70 @@
+{
+ "clip": "synthetic_two_speakers",
+ "note": "Nhãn chắc chắn: clip tự tạo, biết trước ai nói câu nào.",
+ "timing_source": "generator",
+ "lines": [
+  {
+   "index": 1,
+   "start": 0.8,
+   "end": 6.06,
+   "speaker": "A",
+   "confidence": "high"
+  },
+  {
+   "index": 2,
+   "start": 6.76,
+   "end": 11.6,
+   "speaker": "B",
+   "confidence": "high"
+  },
+  {
+   "index": 3,
+   "start": 12.3,
+   "end": 16.02,
+   "speaker": "A",
+   "confidence": "high"
+  },
+  {
+   "index": 4,
+   "start": 16.72,
+   "end": 21.43,
+   "speaker": "B",
+   "confidence": "high"
+  },
+  {
+   "index": 5,
+   "start": 22.13,
+   "end": 27.29,
+   "speaker": "A",
+   "confidence": "high"
+  },
+  {
+   "index": 6,
+   "start": 27.99,
+   "end": 32.67,
+   "speaker": "B",
+   "confidence": "high"
+  },
+  {
+   "index": 7,
+   "start": 33.37,
+   "end": 38.96,
+   "speaker": "A",
+   "confidence": "high"
+  },
+  {
+   "index": 8,
+   "start": 39.66,
+   "end": 43.21,
+   "speaker": "B",
+   "confidence": "high"
+  },
+  {
+   "index": 9,
+   "start": 43.91,
+   "end": 48.88,
+   "speaker": "A",
+   "confidence": "high"
+  }
+ ]
+}

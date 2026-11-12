@@ -1,5 +1,7 @@
 # Đánh giá chất lượng lồng tiếng trên phim thật — 2026-11-11
 
+> Đợt 2 (người nói, nhận dạng, giọng đọc): `docs/evaluation-2026-11-12.md`. Mục 3 dưới đây đã được thay bằng số đo có nhãn ở đó.
+
 Máy chạy: 4 nhân CPU, 15 GB RAM, không GPU. Mọi con số ghi "đo" đến từ lần chạy thật trên máy này;
 "ước tính" và "chưa đo" được ghi rõ.
 

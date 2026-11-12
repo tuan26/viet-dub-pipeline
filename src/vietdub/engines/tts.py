@@ -43,18 +43,27 @@ def edge(voice: str = "vi-VN-HoaiMyNeural", retries: int = 4, pause: float = 1.5
 
 def piper(model: str | None) -> SynthFn:
     """Offline Piper voices. ``model`` is the path to a Vietnamese .onnx voice file."""
-    if shutil.which("piper") is None:
-        raise VietdubError("Không tìm thấy lệnh 'piper'. Cài bằng: pip install piper-tts")
+    import importlib.util
+    import sys
+
+    # Installed in the same environment it is run as a module, so it works without
+    # the environment's bin directory on PATH.
+    if importlib.util.find_spec("piper") is not None:
+        command = [sys.executable, "-m", "piper"]
+    elif shutil.which("piper"):
+        command = ["piper"]
+    else:
+        raise VietdubError("Không tìm thấy Piper. Cài bằng: pip install piper-tts")
     if not model:
         raise VietdubError("Piper cần --voice trỏ tới file giọng .onnx tiếng Việt.")
 
     def synth(text: str, stem: Path) -> Path:
         out = stem.with_suffix(".wav")
         proc = subprocess.run(
-            ["piper", "--model", model, "--output_file", str(out)],
+            [*command, "--model", model, "--output_file", str(out)],
             input=text, capture_output=True, text=True,
         )
-        if proc.returncode != 0:
+        if proc.returncode != 0 or not out.exists():
             raise VietdubError("piper lỗi:\n" + "\n".join(proc.stderr.strip().splitlines()[-3:]))
         return out
 

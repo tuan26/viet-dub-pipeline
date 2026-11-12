@@ -1,0 +1,112 @@
+{
+ "clip": "sintel_music",
+ "note": "Nhãn nháp: gán theo nội dung câu thoại, hiểu biết về phim và cao độ giọng; CHƯA được người nghe xác nhận. confidence=low nghĩa là không đủ căn cứ, bị loại khỏi phép đo.",
+ "timing_source": "official English subtitles",
+ "lines": [
+  {
+   "index": 1,
+   "start": 7.25,
+   "end": 9.22,
+   "speaker": "SHAMAN",
+   "confidence": "high"
+  },
+  {
+   "index": 2,
+   "start": 11.8,
+   "end": 15.8,
+   "speaker": "SHAMAN",
+   "confidence": "high"
+  },
+  {
+   "index": 3,
+   "start": 18.0,
+   "end": 21.45,
+   "speaker": "SHAMAN",
+   "confidence": "high"
+  },
+  {
+   "index": 4,
+   "start": 21.75,
+   "end": 24.8,
+   "speaker": "SHAMAN",
+   "confidence": "high"
+  },
+  {
+   "index": 5,
+   "start": 25.25,
+   "end": 26.3,
+   "speaker": "SINTEL",
+   "confidence": "medium"
+  },
+  {
+   "index": 6,
+   "start": 27.5,
+   "end": 29.0,
+   "speaker": "SHAMAN",
+   "confidence": "high"
+  },
+  {
+   "index": 7,
+   "start": 29.4,
+   "end": 33.8,
+   "speaker": "SHAMAN",
+   "confidence": "high"
+  },
+  {
+   "index": 8,
+   "start": 35.0,
+   "end": 37.5,
+   "speaker": "SINTEL",
+   "confidence": "high"
+  },
+  {
+   "index": 9,
+   "start": 38.0,
+   "end": 42.2,
+   "speaker": "SHAMAN",
+   "confidence": "high"
+  },
+  {
+   "index": 10,
+   "start": 43.4,
+   "end": 45.0,
+   "speaker": "SINTEL",
+   "confidence": "high"
+  },
+  {
+   "index": 11,
+   "start": 48.85,
+   "end": 51.75,
+   "speaker": "SHAMAN",
+   "confidence": "high"
+  },
+  {
+   "index": 12,
+   "start": 52.95,
+   "end": 55.87,
+   "speaker": "SINTEL",
+   "confidence": "high"
+  },
+  {
+   "index": 13,
+   "start": 107.25,
+   "end": 110.5,
+   "speaker": "SINTEL",
+   "confidence": "high"
+  },
+  {
+   "index": 14,
+   "start": 110.75,
+   "end": 113.5,
+   "speaker": "SINTEL",
+   "confidence": "high"
+  },
+  {
+   "index": 15,
+   "start": 128.25,
+   "end": 132.25,
+   "speaker": "SINTEL",
+   "confidence": "high"
+  }
+ ]
+}

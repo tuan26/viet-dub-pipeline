@@ -16,7 +16,7 @@ asr = ["faster-whisper>=1.0"]
 tts = ["edge-tts>=6.1"]
 separate = ["demucs>=4.0"]
 ingest = ["yt-dlp"]
-speakers = ["onnxruntime", "kaldi-native-fbank", "numpy"]
+speakers = ["sherpa-onnx", "numpy"]
 dev = ["pytest>=8"]
 
 [project.scripts]

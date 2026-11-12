@@ -1,0 +1,161 @@
+{
+ "clip": "ed_few",
+ "note": "Nhãn nháp: gán theo nội dung câu thoại, hiểu biết về phim và cao độ giọng; CHƯA được người nghe xác nhận. confidence=low nghĩa là không đủ căn cứ, bị loại khỏi phép đo.",
+ "timing_source": "speech recognition lines (whisper small)",
+ "lines": [
+  {
+   "index": 1,
+   "start": 1.33,
+   "end": 3.85,
+   "speaker": "PROOG",
+   "confidence": "medium"
+  },
+  {
+   "index": 2,
+   "start": 5.03,
+   "end": 6.35,
+   "speaker": "EMO",
+   "confidence": "high"
+  },
+  {
+   "index": 3,
+   "start": 7.39,
+   "end": 12.75,
+   "speaker": "PROOG",
+   "confidence": "high"
+  },
+  {
+   "index": 4,
+   "start": 13.39,
+   "end": 14.13,
+   "speaker": "EMO",
+   "confidence": "high"
+  },
+  {
+   "index": 5,
+   "start": 15.33,
+   "end": 16.63,
+   "speaker": "PROOG",
+   "confidence": "high"
+  },
+  {
+   "index": 6,
+   "start": 17.79,
+   "end": 18.55,
+   "speaker": "PROOG",
+   "confidence": "medium"
+  },
+  {
+   "index": 7,
+   "start": 25.75,
+   "end": 27.71,
+   "speaker": "PROOG",
+   "confidence": "high"
+  },
+  {
+   "index": 8,
+   "start": 44.5,
+   "end": 45.22,
+   "speaker": "PROOG",
+   "confidence": "high"
+  },
+  {
+   "index": 9,
+   "start": 80.47,
+   "end": 82.03,
+   "speaker": "PROOG",
+   "confidence": "high"
+  },
+  {
+   "index": 10,
+   "start": 86.13,
+   "end": 86.69,
+   "speaker": "PROOG",
+   "confidence": "high"
+  },
+  {
+   "index": 11,
+   "start": 88.43,
+   "end": 88.43,
+   "speaker": "PROOG",
+   "confidence": "medium"
+  },
+  {
+   "index": 12,
+   "start": 91.23,
+   "end": 92.77,
+   "speaker": "PROOG",
+   "confidence": "high"
+  },
+  {
+   "index": 13,
+   "start": 99.6,
+   "end": 100.72,
+   "speaker": "PROOG",
+   "confidence": "high"
+  },
+  {
+   "index": 14,
+   "start": 118.83,
+   "end": 119.73,
+   "speaker": "PROOG",
+   "confidence": "high"
+  },
+  {
+   "index": 15,
+   "start": 120.51,
+   "end": 123.71,
+   "speaker": "EMO",
+   "confidence": "high"
+  },
+  {
+   "index": 16,
+   "start": 123.71,
+   "end": 126.97,
+   "speaker": "PROOG",
+   "confidence": "high"
+  },
+  {
+   "index": 17,
+   "start": 129.54,
+   "end": 131.72,
+   "speaker": "PROOG",
+   "confidence": "high"
+  },
+  {
+   "index": 18,
+   "start": 132.8,
+   "end": 134.46,
+   "speaker": "PROOG",
+   "confidence": "high"
+  },
+  {
+   "index": 19,
+   "start": 135.26,
+   "end": 138.94,
+   "speaker": "PROOG",
+   "confidence": "high"
+  },
+  {
+   "index": 20,
+   "start": 139.7,
+   "end": 140.42,
+   "speaker": "PROOG",
+   "confidence": "high"
+  },
+  {
+   "index": 21,
+   "start": 141.22,
+   "end": 143.7,
+   "speaker": "PROOG",
+   "confidence": "high"
+  },
+  {
+   "index": 22,
+   "start": 147.93,
+   "end": 149.31,
+   "speaker": "PROOG",
+   "confidence": "high"
+  }
+ ]
+}
