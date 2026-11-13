@@ -62,6 +62,8 @@ def build_parser() -> argparse.ArgumentParser:
     ar.add_argument("--every", type=float, metavar="PHÚT", help="Lặp lại sau mỗi số phút này (mặc định: chạy một vòng)")
     ar.add_argument("--dry-run", action="store_true", help="Chỉ xem sẽ tìm thấy gì; không ghi, không tải, không lồng tiếng")
     ar.add_argument("--worker", default="worker-1", help="Tên tiến trình, khi chạy nhiều worker song song")
+    aw = asub.add_parser("worker", parents=[cfg], help="Chạy một worker liên tục (thường do 'vietdub serve' khởi động)")
+    aw.add_argument("--name", default="worker-1")
     asub.add_parser("status", parents=[cfg], help="Xem trạng thái mọi video")
     for name, text in (("allow", "Xác nhận quyền sử dụng cho video đang chờ duyệt quyền"),
                        ("deny", "Từ chối video đang chờ duyệt quyền"),
@@ -76,6 +78,17 @@ def build_parser() -> argparse.ArgumentParser:
     ad.add_argument("--out", type=Path, default=Path("dashboard.html"))
     al = asub.add_parser("log", parents=[cfg], help="Xem nhật ký của một video")
     al.add_argument("id")
+
+    sv = sub.add_parser("serve", help="Mở Dashboard web và chạy các worker")
+    sv.add_argument("--config", type=Path, default=Path("pipeline.toml"))
+    sv.add_argument("--host"); sv.add_argument("--port", type=int)
+    sv.add_argument("--workers", type=int, help="Số worker (mặc định theo [server] workers)")
+    us = sub.add_parser("user", help="Quản lý tài khoản Dashboard (dùng khi cài đặt bằng script)")
+    us.add_argument("action", choices=["add", "password", "list"])
+    us.add_argument("username", nargs="?")
+    us.add_argument("--role", choices=["viewer", "reviewer", "admin"], default="reviewer")
+    us.add_argument("--config", type=Path, default=Path("pipeline.toml"))
+    us.add_argument("--password-stdin", action="store_true", help="Đọc mật khẩu từ stdin thay vì hỏi")
 
     ing = sub.add_parser("ingest", help="Tìm và tải video từ nguồn được phép")
     isub = ing.add_subparsers(dest="action", required=True)
@@ -284,6 +297,17 @@ def _auto(args: argparse.Namespace) -> int:
     from .auto.store import Store
 
     cfg = auto_config.load(args.config)
+    if args.action == "worker":
+        import os
+
+        if cfg.server.get("cpu_threads"):
+            n = str(int(cfg.server["cpu_threads"]))
+            for key in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS", "VIETDUB_CPU_THREADS"):
+                os.environ.setdefault(key, n)
+        if cfg.server.get("nice"):
+            os.nice(int(cfg.server["nice"]))
+        orchestrator.work(cfg, Store(cfg.database), args.name, log=lambda m: print(f"[{args.name}] {m}", flush=True))
+        return 0
     store = Store(cfg.database)
     if args.action == "run":
         while True:
@@ -326,10 +350,43 @@ def _auto(args: argparse.Namespace) -> int:
     return 0
 
 
+def _serve(args: argparse.Namespace) -> int:
+    from .serve import serve
+
+    return serve(args.config, args.host, args.port, args.workers)
+
+
+def _user(args: argparse.Namespace) -> int:
+    import getpass
+
+    from .auto import config as auto_config
+    from .auto.store import Store
+    from .web.auth import hash_password, validate_password
+
+    store = Store(auto_config.load(args.config).database)
+    if args.action == "list":
+        for u in store.users():
+            print(f"{u['username']:20s} {u['role']:9s} {'(khoá)' if u['disabled'] else ''}")
+        return 0
+    if not args.username:
+        raise VietdubError("Cần tên tài khoản.")
+    password = sys.stdin.readline().rstrip("\n") if args.password_stdin else getpass.getpass("Mật khẩu: ")
+    validate_password(password)
+    if args.action == "add":
+        if not store.add_user(args.username, hash_password(password), args.role):
+            raise VietdubError(f"Tài khoản '{args.username}' đã có.")
+    else:
+        if not store.user(args.username):
+            raise VietdubError(f"Không có tài khoản '{args.username}'.")
+        store.set_user(args.username, password_hash=hash_password(password))
+    print(f"Đã lưu tài khoản {args.username}.")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        return {"run": _run, "batch": _batch, "ingest": _ingest, "auto": _auto}[args.command](args)
+        return {"run": _run, "batch": _batch, "ingest": _ingest, "auto": _auto, "serve": _serve, "user": _user}[args.command](args)
     except ReviewNeeded as stop:
         print(f"\nĐã dừng để bạn duyệt vai. Mở thư mục: {stop}\n"
               "  1. Nghe các file .wav của từng người nói.\n"

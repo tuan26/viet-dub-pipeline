@@ -122,7 +122,9 @@ def run(job: Job) -> Path:
             timed("translate", t)
         _save(seg_file, segments)
 
-    # Lines with nothing to pronounce (music notes, punctuation) are left silent.
+    # Lines with nothing to pronounce (music notes, punctuation, lines a reviewer marked
+    # to skip) are left silent but stay in segments.json.
+    all_segments = segments
     segments = [s for s in segments if any(c.isalnum() for c in s.translation)]
     if not segments:
         raise VietdubError("Không có câu thoại nào để lồng tiếng.")
@@ -140,14 +142,14 @@ def run(job: Job) -> Path:
             # the original mix: on the labelled clips embeddings were better on it than on separated vocals
             speakers = job.diarize(audio, segments)
             timed("speakers", t)
-            _save(seg_file, segments)
+            _save(seg_file, all_segments)
             speakers_file.write_text(json.dumps(speakers, ensure_ascii=False, indent=2), encoding="utf-8")
         reviewed = False
         if job.review:
             reviewed, speakers = review.sync(work, segments, speakers, audio)
             if not reviewed:
                 raise ReviewNeeded(str(work / "review"))
-            _save(seg_file, segments)
+            _save(seg_file, all_segments)
         voices = job.cast(speakers)
 
     # 4. Voice
@@ -193,7 +195,7 @@ def run(job: Job) -> Path:
                 shortened.append(seg.index)
         (work / "shortened.json").write_text(json.dumps(shortened), encoding="utf-8")
         if shortened:
-            _save(seg_file, segments)
+            _save(seg_file, all_segments)
             placements = timing.plan(segments, [media.duration(p) for p in spoken], total, job.max_speed)
     elif (work / "shortened.json").exists():
         shortened = json.loads((work / "shortened.json").read_text())
@@ -236,8 +238,10 @@ def run(job: Job) -> Path:
         "sped_up": len(sped),
         "max_speed_used": max((p.speed for p in sped), default=1.0),
         "truncated": [p.index for p in placements if p.truncated],
+        "line_speed": {str(p.index): p.speed for p in sped},
         "speakers": speakers,
-        "speakers_reviewed": bool(job.review and speakers),
+        # confirmed through --review, or each speaker confirmed by a person in the dashboard
+        "speakers_reviewed": bool(speakers) and (job.review or all(v.get("confirmed_by") for v in speakers.values())),
         "shortened": shortened,
         "untranslated": json.loads((work / "untranslated.json").read_text()) if (work / "untranslated.json").exists() else [],
         "background": "separated" if job.separate and video_has_audio else "ducked-original",

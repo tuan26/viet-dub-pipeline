@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Lịch sử{% endblock %}
+{% block content %}
+<h1>Lịch sử</h1>
+<div class="grid2">
+<section class="card">
+  <h2>Quyết định của người dùng</h2>
+  <table class="log"><tr><th>Lúc</th><th>Người</th><th>Video</th><th>Nội dung</th></tr>
+  {% for e in human %}<tr><td>{{ e.ts|ts }}</td><td>{{ e.username or '' }}</td><td>{% if e.video_id %}<a href="/video?id={{ e.video_id|urlencode }}">{{ e.video_id }}</a>{% endif %}</td><td>{{ e.message }}</td></tr>
+  {% else %}<tr><td colspan="4" class="muted">Chưa có.</td></tr>{% endfor %}</table>
+</section>
+<section class="card">
+  <h2>Chỉnh sửa bản lồng tiếng</h2>
+  <table class="log"><tr><th>Lúc</th><th>Người</th><th>Video</th><th>Sửa</th><th>Trước → sau</th></tr>
+  {% for e in edits %}<tr><td>{{ e.ts|ts }}</td><td>{{ e.username }}</td><td><a href="/video?id={{ e.video_id|urlencode }}">{{ e.video_id }}</a></td><td>{{ e.kind }}{% if e.line_index %} câu {{ e.line_index }}{% elif e.field %} {{ e.field }}{% endif %}</td><td><span class="old">{{ e.old_value }}</span> → <span class="new">{{ e.new_value }}</span></td></tr>
+  {% else %}<tr><td colspan="5" class="muted">Chưa có.</td></tr>{% endfor %}</table>
+</section>
+</div>
+{% endblock %}

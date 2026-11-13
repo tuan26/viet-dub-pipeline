@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Sửa nguồn' if existing else 'Thêm nguồn' }}{% endblock %}
+{% block content %}
+<p><a href="/sources">← Nguồn</a></p>
+<h1>{{ 'Sửa nguồn ' ~ existing.name if existing else 'Thêm nguồn' }}</h1>
+{% if error %}<div class="flash error">{{ error }}</div>{% endif %}
+<form method="post" enctype="multipart/form-data" class="card stack" id="srcform">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <div class="grid2">
+    <label>Tên nguồn <input name="name" value="{{ values.name or '' }}" {{ 'readonly' if existing }} required maxlength="60"></label>
+    <label>Loại nguồn <select name="type" id="stype">
+      {% for k, label in SOURCE_TYPES.items() %}<option value="{{ k }}" {{ 'selected' if values.type == k }}>{{ label }}</option>{% endfor %}</select></label>
+  </div>
+  <fieldset data-for="archive commons youtube_cc"><legend>Tìm kiếm</legend>
+    <label>Từ khoá <input name="query" value="{{ values.query or '' }}"></label>
+    <p class="muted small">Giấy phép trên các trang này do người đăng tự khai, nên mỗi video luôn phải được xác nhận quyền trước khi tải.</p>
+  </fieldset>
+  <fieldset data-for="channel"><legend>Kênh đã cấp phép</legend>
+    <label>URL kênh hoặc playlist <input name="url" value="{{ values.url or '' }}"></label>
+    <label>Nội dung cấp phép (ai cho phép, phạm vi, thời hạn) <input name="permission" value="{{ values.permission or '' }}"></label>
+  </fieldset>
+  <fieldset data-for="manifest"><legend>Danh sách file</legend>
+    <label>Đường dẫn file TOML trên máy chủ <input name="file" value="{{ values.file or '' }}" placeholder="/srv/vietdub/videos.toml"></label>
+  </fieldset>
+  <fieldset data-for="folder"><legend>Thư mục trên máy chủ</legend>
+    <label>Đường dẫn thư mục <input name="path" value="{{ values.path or '' }}" placeholder="/srv/vietdub/videos"></label>
+    <label>Giấy phép của các video trong thư mục <select name="license">
+      {% for k in ('owned', 'licensed', 'public-domain', 'cc0', 'cc-by', 'cc-by-sa') %}<option {{ 'selected' if values.license == k }}>{{ k }}</option>{% endfor %}</select></label>
+  </fieldset>
+  <div class="grid2" data-for="channel folder">
+    <label>Tác giả / ghi công <input name="attribution" value="{{ values.attribution or '' }}"></label>
+    <label>Ngôn ngữ gốc (zh, ko, ja, en…) <input name="language" value="{{ values.language or '' }}"></label>
+  </div>
+  <div class="grid2">
+    <label>Kiểm tra mỗi (phút) <input name="interval_minutes" type="number" step="0.1" min="0.1" value="{{ values.interval_minutes }}"></label>
+    <label>Số video tối đa mỗi lần <input name="limit" type="number" min="1" max="500" value="{{ values.limit }}"></label>
+  </div>
+  <fieldset><legend>Quyền sử dụng</legend>
+    <label class="check"><input type="radio" name="rights" value="needs_approval" {{ 'checked' if values.rights != 'verified' }}> Chưa xác minh — dừng chờ quản trị viên xác nhận từng video</label>
+    <label class="check"><input type="radio" name="rights" value="verified" {{ 'checked' if values.rights == 'verified' }}> Đã xác minh — tự động tải và lồng tiếng (cần license “owned” hoặc file bằng chứng)</label>
+    <label>File bằng chứng (email, hợp đồng, ảnh chụp; tối đa {{ '%.0f' % request.app.state.config.server.max_upload_mb }} MB) <input type="file" name="evidence"></label>
+    {% if existing and existing.evidence %}<p class="small">Đang có: <a href="/source/evidence?name={{ existing.name|urlencode }}">{{ existing.evidence.split('/')[-1] }}</a> (tải file mới để thay)</p>{% endif %}
+  </fieldset>
+  <label class="check"><input type="checkbox" name="enabled" value="1" {{ 'checked' if values.enabled }}> Bật nguồn này</label>
+  <div class="row"><button class="primary">Lưu nguồn</button><a href="/sources">Huỷ</a></div>
+</form>
+{% if existing %}
+<details class="card danger-zone"><summary>Xoá nguồn</summary>
+  <p>Ngừng theo dõi nguồn này. Video đã có vẫn được giữ.</p>
+  <form method="post" action="/source/action"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="name" value="{{ existing.name }}"><input type="hidden" name="action" value="delete"><button class="danger">Xoá nguồn {{ existing.name }}</button></form>
+</details>{% endif %}
+<script>
+(function () {
+  const sel = document.getElementById("stype");
+  function sync() { document.querySelectorAll("[data-for]").forEach(el => el.hidden = !el.dataset.for.split(" ").includes(sel.value)); }
+  sel.addEventListener("change", sync); sync();
+})();
+</script>
+{% endblock %}

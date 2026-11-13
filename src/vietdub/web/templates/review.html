@@ -1,0 +1,92 @@
+{% extends "base.html" %}{% from "_macros.html" import badge %}
+{% block title %}Duyệt: {{ v.title or v.id }}{% endblock %}
+{% block main_class %}wide{% endblock %}
+{% block content %}
+{% set qc = data.qc %}
+<p><a href="/video?id={{ v.id|urlencode }}">← Chi tiết video</a></p>
+<div class="row between sticky-head">
+  <div><h1>Duyệt bản lồng tiếng</h1><div class="muted">{{ v.title or v.id }} · {{ badge(v.state) }}</div></div>
+  {% if can_edit %}
+  <div class="toolbar">
+    <span id="dirty" class="muted"></span>
+    <button id="save" type="button">Lưu</button>
+    <button id="save-render" type="button" class="primary">Lưu và xuất lại video</button>
+  </div>
+  {% endif %}
+</div>
+<div id="status" class="flash" hidden></div>
+{% if not can_edit %}<div class="banner">{% if allowed(user.role, 'reviewer') %}Chỉ sửa được khi video ở trạng thái: {{ editable_states|join(', ') }}. Hiện tại: {{ STATE_LABELS[v.state] }}.{% else %}Tài khoản chỉ xem: không sửa được.{% endif %}</div>{% endif %}
+
+<div class="players">
+  <figure><figcaption>Bản gốc</figcaption><video id="orig" controls preload="metadata" src="/media?id={{ v.id|urlencode }}&kind=original"></video></figure>
+  <figure><figcaption>Bản lồng tiếng {% if data.report.speakers_reviewed %}<span class="badge g-done">vai đã duyệt</span>{% elif data.speakers_enabled %}<span class="badge g-wait">vai do máy gán</span>{% endif %}</figcaption>
+    <video id="dub" controls preload="metadata" src="/media?id={{ v.id|urlencode }}&kind=dubbed&v={{ version }}"></video></figure>
+</div>
+
+{% if qc %}
+<section class="card">
+  <div class="row between"><h2>Kiểm tra tự động: {{ badge(qc.status) }}</h2>
+    <span>{% if qc.critical %}<span class="bad">{{ qc.critical }} lỗi nghiêm trọng</span>{% endif %} {% if qc.warnings %}<span class="warnc">{{ qc.warnings }} cảnh báo</span>{% endif %}</span></div>
+  <ul class="qc-list">
+  {% for c in qc.checks if not c.ok %}<li class="{{ 'bad' if c.severity == 'critical' else 'warnc' }}">{{ 'Nghiêm trọng' if c.severity == 'critical' else 'Cảnh báo' }}: {{ c.label or c.name }} — {{ c.detail or c.value }}</li>{% endfor %}
+  {% if qc.status == 'QC_PASS' %}<li>Mọi tiêu chí tự động đều đạt.</li>{% endif %}
+  </ul>
+  {% if qc.gaps %}<p><b>Có thể sót lời thoại</b> (có tiếng người nhưng không có câu nào):
+    {% for g in qc.gaps %}<button type="button" class="chip" data-play-orig="{{ g[0] }}" data-end="{{ g[1] }}">▶ {{ '%.1f' % g[0] }}–{{ '%.1f' % g[1] }}s</button>{% endfor %}</p>{% endif %}
+  <p class="muted small">{{ qc.disclaimer }}</p>
+</section>
+{% endif %}
+
+{% if data.speakers_enabled %}
+<section class="card">
+  <h2>Nhân vật và giọng đọc</h2>
+  <p class="muted small">Giới tính máy gợi ý chỉ dựa vào cao độ giọng và thường sai với giọng diễn xuất — hãy nghe mẫu rồi chọn giọng. Khi bấm Lưu, mọi nhân vật trong bảng được ghi là đã duyệt bởi bạn.</p>
+  <table id="cast"><tr><th>Nhân vật</th><th>Số câu</th><th>Nghe giọng gốc</th><th>Máy gợi ý</th><th>Giọng tiếng Việt</th><th></th><th>Đã duyệt</th></tr>
+  {% for p in data.speakers %}
+  <tr data-speaker="{{ p.name }}">
+    <td><b>{{ p.name }}</b></td><td class="lines">{{ p.lines }}</td>
+    <td><audio controls preload="none" src="/media?id={{ v.id|urlencode }}&kind=sample&speaker={{ p.name|urlencode }}"></audio></td>
+    <td class="muted">{{ {'female': 'nữ', 'male': 'nam'}.get(p.suggested_gender, '?') }}{% if p.pitch_hz %} ({{ '%.0f' % p.pitch_hz }} Hz){% endif %}</td>
+    <td><select class="voice" {{ 'disabled' if not can_edit }}>
+      {% for vo in data.voices %}<option value="{{ vo.id }}" {{ 'selected' if vo.id == p.voice }}>{{ vo.label }}</option>{% endfor %}</select></td>
+    <td><button type="button" class="voice-test" {{ 'disabled' if not can_edit }}>🔊 Nghe thử</button></td>
+    <td class="muted">{{ p.confirmed_by or 'chưa' }}</td>
+  </tr>{% endfor %}
+  </table>
+</section>
+{% endif %}
+
+<section class="card">
+  <div class="row between"><h2>Câu thoại ({{ data.lines|length }})</h2>
+    <label class="check"><input type="checkbox" id="only-flagged"> Chỉ hiện câu có cảnh báo</label></div>
+  <table id="lines" class="lines">
+    <tr><th>#</th><th>Thời gian</th><th>Cảnh báo</th>{% if data.speakers_enabled %}<th>Người nói</th>{% endif %}<th>Câu gốc</th><th>Bản dịch tiếng Việt</th><th>Nghe</th></tr>
+    {% for l in data.lines %}
+    <tr data-index="{{ l.index }}" data-start="{{ l.start }}" data-end="{{ l.end }}" class="{{ 'flagged' if l.flags }} {{ 'skipped' if l.skipped }}">
+      <td>{{ l.index }}</td>
+      <td><button type="button" class="link seek">{{ '%d:%05.2f' % (l.start // 60, l.start % 60) }}</button><br><small class="muted">{{ '%.1f' % (l.end - l.start) }}s</small></td>
+      <td>{% for f in l.flags %}<span class="flag f-{{ f }}" title="{{ LINE_FLAGS.get(f, f) }}">{{ LINE_FLAGS.get(f, f) }}</span>{% endfor %}</td>
+      {% if data.speakers_enabled %}<td><select class="speaker" {{ 'disabled' if not can_edit }}>
+        {% for p in data.speakers %}<option {{ 'selected' if p.name == l.speaker }}>{{ p.name }}</option>{% endfor %}
+        {% if l.speaker and l.speaker not in data.speakers|map(attribute='name') %}<option selected>{{ l.speaker }}</option>{% endif %}
+        <option value="__new__">＋ Người nói mới…</option></select></td>{% endif %}
+      <td class="src">{{ l.text }}</td>
+      <td><textarea class="tr" rows="2" maxlength="500" {{ 'disabled' if not can_edit }}>{{ '' if l.skipped else l.translation }}</textarea>
+        <label class="check small"><input type="checkbox" class="skip" {{ 'checked' if l.skipped }} {{ 'disabled' if not can_edit }}> Bỏ câu này (không đọc)</label></td>
+      <td class="play"><button type="button" class="p-orig" title="Nghe câu gốc">▶ Gốc</button><button type="button" class="p-dub" title="Nghe câu trong bản lồng tiếng hiện tại">▶ Lồng</button>{% if can_edit %}<button type="button" class="p-test" title="Đọc thử bản dịch đang sửa bằng giọng của người nói">🔊 Thử</button>{% endif %}</td>
+    </tr>{% endfor %}
+  </table>
+</section>
+
+{% if edits %}
+<section class="card">
+  <h2>Chỉnh sửa gần đây</h2>
+  <table class="log"><tr><th>Lúc</th><th>Người</th><th>Sửa</th><th>Trước → sau</th></tr>
+  {% for e in edits %}<tr><td>{{ e.ts|ts }}</td><td>{{ e.username }}</td><td>{{ e.kind }}{% if e.line_index %} câu {{ e.line_index }}{% elif e.field %} {{ e.field }}{% endif %}</td><td><span class="old">{{ e.old_value }}</span> → <span class="new">{{ e.new_value }}</span></td></tr>{% endfor %}
+  </table>
+</section>
+{% endif %}
+<p><a class="button" href="/video?id={{ v.id|urlencode }}#decide">Đi tới duyệt / từ chối bản cuối →</a></p>
+<script type="application/json" id="review-data">{{ {"id": v.id, "csrf": csrf, "canEdit": can_edit, "voices": data.voices, "speakersEnabled": data.speakers_enabled}|tojson }}</script>
+{% endblock %}
+{% block scripts %}<script src="/static/review.js?v={{ version }}"></script>{% endblock %}

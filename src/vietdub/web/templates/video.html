@@ -1,0 +1,111 @@
+{% extends "base.html" %}{% from "_macros.html" import badge, action %}
+{% block title %}{{ v.title or v.id }}{% endblock %}
+{% block head %}{% if STATE_GROUP[v.state] in ('busy', 'queue') %}<meta http-equiv="refresh" content="10">{% endif %}{% endblock %}
+{% block content %}
+<p><a href="/videos">← Danh sách video</a></p>
+<div class="row between">
+  <h1>{{ v.title or v.id }}</h1>
+  <div>{{ badge(v.state) }}{% if v.paused %} <span class="badge g-wait">tạm dừng</span>{% endif %}</div>
+</div>
+{% if v.progress and STATE_GROUP[v.state] == 'busy' %}<div class="banner">Đang làm: {{ v.progress }}</div>{% endif %}
+{% if v.error %}<div class="flash error">{{ v.error }}{% if v.attempts %} (đã thử {{ v.attempts }} lần{% if v.next_attempt_at and v.next_attempt_at > 0 and v.state not in ('FAILED',) %}, lần tới: {{ v.next_attempt_at|ts }}{% endif %}){% endif %}</div>{% endif %}
+
+<div class="toolbar">
+  {% if v.state in ('QC_PASS', 'NEEDS_REVIEW', 'READY', 'REJECTED') %}<a class="button primary" href="/review?id={{ v.id|urlencode }}">Mở trang duyệt</a>{% endif %}
+  {% if has_output %}<a class="button" href="/media?id={{ v.id|urlencode }}&kind=dubbed&download=1">Tải MP4</a>
+  <a class="button" href="/media?id={{ v.id|urlencode }}&kind=srt&download=1">Tải phụ đề</a>{% endif %}
+  {{ action(v, 'retry', csrf, user) }} {{ action(v, 'redo', csrf, user) }} {{ action(v, 'recheck', csrf, user) }}
+  {% if v.paused %}{{ action(v, 'resume', csrf, user) }}{% else %}{{ action(v, 'pause', csrf, user) }}{% endif %}
+  {{ action(v, 'deny', csrf, user, 'danger') }}
+</div>
+
+{% if v.state == 'AWAITING_RIGHTS' and allowed(user.role, 'admin') %}
+<form method="post" action="/video/action" class="card stack">
+  <h2>Xác nhận quyền sử dụng</h2>
+  <p class="muted">Nguồn này chưa được xác minh. Chỉ xác nhận khi bạn đã kiểm tra giấy phép ở trang gốc: <a href="{{ v.page_url }}" target="_blank" rel="noopener">{{ v.page_url }}</a></p>
+  <input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="id" value="{{ v.id }}"><input type="hidden" name="action" value="allow">
+  <label>Căn cứ (bắt buộc, được lưu lại) <input name="note" required placeholder="Ví dụ: đã xem trang gốc, giấy phép CC-BY, tác giả ..."></label>
+  <button class="primary">Xác nhận quyền và cho tải</button>
+</form>
+{% endif %}
+
+<div class="grid2">
+  <section class="card">
+    <h2>Thông tin</h2>
+    <dl class="kv">
+      <dt>Mã</dt><dd><code>{{ v.id }}</code></dd>
+      <dt>Nguồn</dt><dd><a href="/source/edit?name={{ v.source|urlencode }}">{{ v.source }}</a></dd>
+      <dt>Trang gốc</dt><dd>{% if v.page_url and v.page_url.startswith('http') %}<a href="{{ v.page_url }}" target="_blank" rel="noopener">{{ v.page_url }}</a>{% else %}{{ v.page_url }}{% endif %}</dd>
+      <dt>Giấy phép</dt><dd>{{ v.license }}</dd>
+      <dt>Tác giả</dt><dd>{{ v.attribution }}</dd>
+      <dt>Căn cứ quyền</dt><dd>{{ v.rights_basis }}{% if v.permission %}<br><span class="muted">{{ v.permission }}</span>{% endif %}</dd>
+      <dt>Thời lượng</dt><dd>{{ v.duration|minutes }} phút</dd>
+      <dt>Mã nội dung</dt><dd class="muted"><small>{{ v.content_hash or '' }}</small></dd>
+    </dl>
+  </section>
+  <section class="card">
+    <h2>Xử lý</h2>
+    {% if report %}
+    <dl class="kv">
+      <dt>Câu thoại</dt><dd>{{ report.segments }}</dd>
+      <dt>Người nói</dt><dd>{{ report.speakers|length if report.speakers else 'một giọng' }}{% if report.speakers %} — {{ 'đã duyệt vai' if report.speakers_reviewed else 'máy tự gán' }}{% endif %}</dd>
+      <dt>Tăng tốc / bị cắt</dt><dd>{{ report.sped_up }} / {{ report.truncated|length }}</dd>
+      <dt>Tổng thời gian</dt><dd>{{ '%.0f' % report.elapsed_seconds }}s (lần chạy gần nhất)</dd>
+      {% for k, val in (report.stage_seconds or {}).items() %}<dt class="sub">{{ k }}</dt><dd>{{ '%.0f' % val }}s</dd>{% endfor %}
+    </dl>
+    {% else %}<p class="muted">Chưa lồng tiếng.</p>{% endif %}
+  </section>
+</div>
+
+{% if qc %}
+<section class="card">
+  <h2>Kiểm tra tự động: {{ badge(qc.status) }}</h2>
+  <p class="muted small">{{ qc.disclaimer }}</p>
+  <table><tr><th>Tiêu chí</th><th>Mức</th><th>Kết quả</th><th>Giá trị</th><th>Chi tiết</th></tr>
+  {% for c in qc.checks %}<tr class="{{ '' if c.ok else ('row-bad' if c.severity == 'critical' else 'row-warn') }}">
+    <td>{{ c.label or c.name }}</td><td>{{ 'Nghiêm trọng' if c.severity == 'critical' else 'Cảnh báo' }}</td>
+    <td>{{ 'Đạt' if c.ok else 'Không đạt' }}</td><td>{{ c.value }}</td><td class="muted">{{ c.detail }}</td></tr>{% endfor %}
+  </table>
+</section>
+{% endif %}
+
+{% if v.state in ('QC_PASS', 'NEEDS_REVIEW', 'READY') and allowed(user.role, 'reviewer') %}
+<section class="card" id="decide">
+  <h2>Quyết định bản cuối</h2>
+  <div class="grid2">
+  {% if v.state in ('QC_PASS', 'NEEDS_REVIEW') %}
+  <form method="post" action="/video/action" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="id" value="{{ v.id }}"><input type="hidden" name="action" value="approve">
+    <label>Ghi chú duyệt (bắt buộc) <input name="note" required placeholder="Đã xem toàn bộ, bản dịch và giọng ổn"></label>
+    {% if qc and qc.critical %}<label class="check"><input type="checkbox" name="override" value="1"> Tôi đã kiểm tra các lỗi nghiêm trọng ở trên và vẫn duyệt</label>{% endif %}
+    <button class="primary">Duyệt bản cuối</button>
+  </form>{% endif %}
+  <form method="post" action="/video/action" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="id" value="{{ v.id }}"><input type="hidden" name="action" value="reject">
+    <label>Lý do từ chối <input name="note" placeholder="Không bắt buộc"></label>
+    <button class="danger">Từ chối</button>
+  </form>
+  </div>
+</section>
+{% endif %}
+
+<div class="grid2">
+<section class="card">
+  <h2>Nhật ký</h2>
+  <table class="log"><tr><th>Lúc</th><th>Bước</th><th>Nội dung</th></tr>
+  {% for e in events %}<tr class="lv-{{ e.level }}"><td>{{ e.ts|ts }}</td><td>{{ e.stage }}</td><td>{{ e.message }}{% if e.seconds and e.level != 'done' %} <span class="muted">({{ '%.0f' % e.seconds }}s)</span>{% endif %}{% if e.username %} <span class="muted">— {{ e.username }}</span>{% endif %}</td></tr>{% endfor %}
+  </table>
+</section>
+<section class="card">
+  <h2>Lịch sử chỉnh sửa</h2>
+  {% if edits %}<table class="log"><tr><th>Lúc</th><th>Người</th><th>Sửa</th><th>Trước → sau</th></tr>
+  {% for e in edits %}<tr><td>{{ e.ts|ts }}</td><td>{{ e.username }}</td><td>{{ e.kind }}{% if e.line_index %} câu {{ e.line_index }}{% elif e.field %} {{ e.field }}{% endif %}</td><td><span class="old">{{ e.old_value }}</span> → <span class="new">{{ e.new_value }}</span></td></tr>{% endfor %}
+  </table>{% else %}<p class="muted">Chưa có chỉnh sửa.</p>{% endif %}
+</section>
+</div>
+{% if allowed(user.role, 'admin') and v.state in ACTIONS['delete'][0] %}
+<details class="card danger-zone"><summary>Xoá video</summary>
+  <p>Xoá bản lồng tiếng và file đã tải (chỉ file hệ thống tự tạo trong thư mục thư viện). Dòng thông tin vẫn được giữ để video này không bị tải lại.</p>
+  {{ action(v, 'delete', csrf, user, 'danger') }}
+</details>{% endif %}
+{% endblock %}

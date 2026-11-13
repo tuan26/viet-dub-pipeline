@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Phát hành{% endblock %}
+{% block content %}
+<h1>Phát hành <span class="soon">sắp có</span></h1>
+<div class="banner">Hệ thống <b>chưa đăng video lên bất kỳ nền tảng nào</b>. Phần này là chỗ dành sẵn cho giai đoạn tiếp theo.</div>
+<div class="grid2">
+  <section class="card"><h2>Đã duyệt, sẵn sàng cho phát hành ({{ ready|length }})</h2>
+    <ul>{% for v in ready %}<li><a href="/video?id={{ v.id|urlencode }}">{{ v.title or v.id }}</a> — <a href="/media?id={{ v.id|urlencode }}&kind=dubbed&download=1">tải MP4</a></li>{% else %}<li class="muted">Chưa có video nào được duyệt.</li>{% endfor %}</ul>
+  </section>
+  <section class="card"><h2>Dự kiến</h2>
+    <ul class="muted">
+      <li>Giai đoạn 3 — tạo nội dung: trailer, video ngắn 9:16, thumbnail, tiêu đề, mô tả, hashtag (chỉ khi giấy phép cho phép cắt ghép).</li>
+      <li>Giai đoạn 4 — phát hành: kết nối YouTube, Facebook, TikTok bằng API chính thức; lịch đăng; chống đăng trùng; theo dõi quota; chế độ chạy thử.</li>
+      <li>Mọi lần đăng đều cần người duyệt; không đăng tự động nội dung chưa được duyệt.</li>
+    </ul>
+  </section>
+</div>
+{% endblock %}

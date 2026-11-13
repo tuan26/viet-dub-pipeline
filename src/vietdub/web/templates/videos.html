@@ -1,0 +1,34 @@
+{% extends "base.html" %}{% from "_macros.html" import badge, action %}
+{% block title %}Video{% endblock %}
+{% block head %}<meta http-equiv="refresh" content="30">{% endblock %}
+{% block content %}
+<h1>Video</h1>
+<form class="filters" method="get" action="/videos">
+  <input name="q" value="{{ q }}" placeholder="Tìm theo tên hoặc mã">
+  <select name="state"><option value="">Mọi trạng thái</option>
+    {% for st, label in STATE_LABELS.items() %}<option value="{{ st }}" {{ 'selected' if st == state }}>{{ label }}</option>{% endfor %}</select>
+  <select name="source"><option value="">Mọi nguồn</option>
+    {% for s in sources %}<option {{ 'selected' if s == source }}>{{ s }}</option>{% endfor %}</select>
+  <button>Lọc</button> {% if q or state or source or group %}<a href="/videos">Bỏ lọc</a>{% endif %}
+</form>
+<table>
+  <tr><th>Video</th><th>Nguồn</th><th>Trạng thái</th><th>Phút</th><th>Ghi chú</th><th>Cập nhật</th><th></th></tr>
+  {% for v in videos %}
+  <tr>
+    <td><a href="/video?id={{ v.id|urlencode }}">{{ v.title or v.id }}</a><br><small class="muted">{{ v.id }}</small></td>
+    <td>{{ v.source }}</td>
+    <td>{{ badge(v.state) }}{% if v.paused %} <span class="badge g-wait">tạm dừng</span>{% endif %}
+      {% if v.progress and STATE_GROUP[v.state] == 'busy' %}<br><small class="muted">{{ v.progress }}</small>{% endif %}</td>
+    <td>{{ v.duration|minutes }}</td>
+    <td class="note">{% if v.qc_summary %}{% if v.qc_summary.critical %}<span class="bad">{{ v.qc_summary.critical }} lỗi nghiêm trọng</span> {% endif %}{% if v.qc_summary.warnings %}<span class="warnc">{{ v.qc_summary.warnings }} cảnh báo</span>{% endif %}
+      {% elif v.error %}<span class="bad">{{ v.error[:140] }}</span>{% if v.attempts %} <span class="muted">(lần {{ v.attempts }})</span>{% endif %}{% elif v.state == 'AWAITING_RIGHTS' %}<span class="muted">{{ v.license }} — {{ v.rights_basis }}</span>{% endif %}</td>
+    <td>{{ v.updated_at|ago }}</td>
+    <td class="actions">
+      {% if v.state in ('QC_PASS', 'NEEDS_REVIEW', 'READY', 'REJECTED') %}<a class="button primary" href="/review?id={{ v.id|urlencode }}">Duyệt</a>{% endif %}
+      {{ action(v, 'retry', csrf, user) }}
+      {% if v.paused %}{{ action(v, 'resume', csrf, user) }}{% else %}{{ action(v, 'pause', csrf, user) }}{% endif %}
+    </td>
+  </tr>
+  {% else %}<tr><td colspan="7" class="muted">Không có video nào.</td></tr>{% endfor %}
+</table>
+{% endblock %}

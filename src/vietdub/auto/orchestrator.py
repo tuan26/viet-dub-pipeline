@@ -8,7 +8,11 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import os
 import shutil
+import signal
+import socket
+import threading
 import time
 import traceback
 import urllib.request
@@ -24,8 +28,8 @@ from ..models import TransientError, VietdubError
 from ..rights import check_rights
 from . import qc as qc_module
 from . import sources as sources_module
-from .config import Config
-from .store import Store
+from .config import Config, Source, source_from_row, source_to_row
+from .store import BACK, Store
 
 
 class Defer(Exception):
@@ -116,7 +120,7 @@ def dub(cfg: Config, store: Store, video: dict) -> dict:
     args = argparse.Namespace(**{k: (Path(v) if k in ("glossary", "speaker_model") and v else v) for k, v in cfg.dubbing.items()})
     out_dir = cfg.library / "dubbed" / _item(video).slug()
     job = cli._job(args, Path(video["path"]), out_dir, rights, None, args.lang or cli._language(video["language"] or ""))
-    job.log = lambda message: None
+    job.log = lambda message: store.update(video["id"], progress=message.strip()[:200])
     started = time.time()
     pipeline.run(job)
     store.log(video["id"], "dub", "done", f"Lồng tiếng xong trong {time.time() - started:.0f}s", seconds=video["duration"])
@@ -125,7 +129,8 @@ def dub(cfg: Config, store: Store, video: dict) -> dict:
 
 def check(cfg: Config, store: Store, video: dict) -> dict:
     result = qc_module.check(Path(video["out_dir"]), cfg.qc)
-    return {"state": result["status"], "qc": {"status": result["status"], "reasons": result["reasons"]}}
+    return {"state": result["status"], "qc": {"status": result["status"], "reasons": result["reasons"],
+                                               "critical": result["critical"], "warnings": result["warnings"]}}
 
 
 @dataclass
@@ -136,11 +141,26 @@ class Steps:
     check: Callable = check
 
 
+def import_sources(cfg: Config, store: Store) -> int:
+    """pipeline.toml only seeds the source list: a source already in the database (even one
+    deleted in the dashboard) is left as it is, so dashboard edits win."""
+    return sum(store.upsert_source(source_to_row(s), "toml", replace=False) for s in cfg.sources)
+
+
+def active_sources(cfg: Config, store: Store, write: bool = True) -> list[Source]:
+    if write:
+        import_sources(cfg, store)
+        return [source_from_row(r) for r in store.source_rows() if r["enabled"] and r["type"]]
+    known = {r["name"] for r in store.source_rows(include_deleted=True)}
+    return ([source_from_row(r) for r in store.source_rows() if r["enabled"] and r["type"]]
+            + [s for s in cfg.sources if s.name not in known])
+
+
 def discover(cfg: Config, store: Store, steps: Steps, dry_run: bool, log: Callable[[str], None]) -> dict:
     counts = {"new": 0, "awaiting_rights": 0, "known": 0, "bad_licence": 0, "source_errors": 0}
-    for source in cfg.sources:
-        if not dry_run and not store.source_due(source.name, source.interval_minutes):
-            continue
+    for source in active_sources(cfg, store, write=not dry_run):
+        if not dry_run and not store.claim_source(source.name, source.interval_minutes):
+            continue  # not due yet, or another worker is checking it
         try:
             items = steps.discover(source)
         except VietdubError as exc:
@@ -189,8 +209,10 @@ def _attempt(cfg: Config, store: Store, video: dict, waiting_state: str, stage: 
         store.release(video["id"], state, error=fields.pop("error", None), **fields)
         store.log(video["id"], stage, "info", f"→ {state}", time.time() - started)
         return state
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, SystemExit):
+        # stopped from outside: the video goes back to its queue, its work folder is kept
         store.release(video["id"], waiting_state)
+        store.log(video["id"], stage, "warning", "Worker dừng giữa chừng; video trở lại hàng đợi")
         raise
     except Defer as wait:
         store.release(video["id"], waiting_state, next_attempt_at=wait.until, error=str(wait))
@@ -231,3 +253,94 @@ def run_once(cfg: Config, store: Store, worker: str = "worker-1", dry_run: bool 
             summary["processed"] += 1
             done += 1
     return summary
+
+
+STAGES = (("DUBBED", "check", "check"), ("DOWNLOADED", "dub", "dub"), ("APPROVED", "download", "download"))
+
+
+class Heartbeat(threading.Thread):
+    """Keeps the worker row and the claimed video's lock fresh while a long step runs, on
+    its own connection. A worker that dies stops beating and its video is recovered."""
+
+    def __init__(self, url: str, name: str, every: float):
+        super().__init__(daemon=True)
+        self.url, self.name, self.every = url, name, every
+        self.video_id: str | None = None
+        self.stage: str | None = None
+        self.status = "idle"
+        self._stop = threading.Event()
+
+    def run(self) -> None:
+        store = None
+        while not self._stop.wait(self.every):
+            try:
+                store = store or Store(self.url)
+                store.worker_beat(self.name, os.getpid(), socket.gethostname(), self.status, self.video_id, self.stage)
+                if self.video_id:
+                    store.touch(self.video_id, self.name)
+            except Exception:
+                store = None  # database unreachable for now; try again on the next beat
+
+    def stop(self) -> None:
+        self._stop.set()
+
+
+def work(cfg: Config, store: Store, name: str, steps: Steps | None = None, max_cycles: int | None = None,
+         log: Callable[[str], None] = print) -> None:
+    """Run until stopped: check due sources, then take one job at a time (finishing work
+    first: checks, then dubbing, then downloads). SIGTERM finishes cleanly: the current
+    video goes back to its queue and is resumed by the next worker."""
+    steps = steps or Steps()
+    srv = cfg.server
+    beat = Heartbeat(store.url, name, srv["heartbeat_seconds"])
+    store.worker_beat(name, os.getpid(), socket.gethostname(), "idle", started=True)
+    beat.start()
+
+    def stop(signum, frame):
+        raise KeyboardInterrupt
+
+    try:
+        signal.signal(signal.SIGTERM, stop)
+    except ValueError:
+        pass  # not the main thread (tests)
+    cycles = 0
+    try:
+        while max_cycles is None or cycles < max_cycles:
+            cycles += 1
+            try:
+                if store.setting("paused") == "1":
+                    beat.status = "paused"
+                    store.worker_beat(name, os.getpid(), socket.gethostname(), "paused")
+                    time.sleep(srv["poll_seconds"])
+                    continue
+                for vid in store.recover_stale(cfg.limits["stale_minutes"] * 60):
+                    log(f"Khôi phục {vid}")
+                discover(cfg, store, steps, False, log)
+                video = None
+                for waiting, stage, fn_name in STAGES:
+                    video = store.claim(waiting, name)
+                    if video:
+                        break
+                if not video:
+                    beat.status, beat.video_id, beat.stage = "idle", None, None
+                    store.worker_beat(name, os.getpid(), socket.gethostname(), "idle")
+                    time.sleep(srv["poll_seconds"])
+                    continue
+                beat.status, beat.video_id, beat.stage = "busy", video["id"], stage
+                store.worker_beat(name, os.getpid(), socket.gethostname(), "busy", video["id"], stage)
+                log(f"{stage}: {video['id']}")
+                _attempt(cfg, store, video, waiting, stage, getattr(steps, fn_name), log)
+                beat.status, beat.video_id, beat.stage = "idle", None, None
+            except (KeyboardInterrupt, SystemExit):
+                raise
+            except Exception as exc:  # database gone for a moment, a bug in one step: keep the worker alive
+                log(f"Lỗi vòng lặp worker: {type(exc).__name__}: {exc}")
+                time.sleep(srv["poll_seconds"])
+    except (KeyboardInterrupt, SystemExit):
+        log("Worker dừng.")
+    finally:
+        beat.stop()
+        try:
+            store.worker_beat(name, os.getpid(), socket.gethostname(), "stopped")
+        except Exception:
+            pass

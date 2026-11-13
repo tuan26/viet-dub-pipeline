@@ -84,7 +84,7 @@ def test_source_schedule(store):
 
 
 def test_config_refuses_verified_without_proof(tmp_path):
-    with pytest.raises(VietdubError, match="evidence"):
+    with pytest.raises(VietdubError, match="bằng chứng"):
         auto_config.load(write_config(tmp_path, licence="licensed"))
     path = write_config(tmp_path)
     path.write_text(path.read_text().replace('type = "folder"', 'type = "archive"'), encoding="utf-8")

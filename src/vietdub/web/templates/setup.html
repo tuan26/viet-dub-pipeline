@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block title %}Cài đặt lần đầu{% endblock %}{% block main_class %}narrow{% endblock %}
+{% block content %}
+<h1>Tạo tài khoản quản trị</h1>
+<p class="muted">Hệ thống chưa có tài khoản nào. Tài khoản đầu tiên có toàn quyền: quản lý nguồn, xác nhận quyền sử dụng, xoá, quản lý tài khoản khác.</p>
+{% if error %}<div class="flash error">{{ error }}</div>{% endif %}
+<form method="post" action="/setup" class="card stack">
+  <label>Tên đăng nhập <input name="username" value="{{ username or '' }}" required autofocus pattern="[\w.\-]{3,30}"></label>
+  <label>Mật khẩu (ít nhất 8 ký tự) <input name="password" type="password" minlength="8" required></label>
+  <label>Nhập lại mật khẩu <input name="password2" type="password" minlength="8" required></label>
+  <button class="primary">Tạo tài khoản</button>
+</form>
+{% endblock %}

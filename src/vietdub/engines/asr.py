@@ -38,7 +38,10 @@ def transcribe(audio: Path, language: str | None, model: str = "small", vad: boo
         raise VietdubError(f"Không giải mã được âm thanh {audio} để nhận dạng.")
     samples = np.frombuffer(proc.stdout, np.int16).astype(np.float32) / 32768.0
 
-    whisper = WhisperModel(model, device="auto", compute_type="auto")
+    import os
+
+    threads = int(os.environ.get("VIETDUB_CPU_THREADS", "0") or 0)  # 0: library default
+    whisper = WhisperModel(model, device="auto", compute_type="auto", cpu_threads=threads)
     result, _info = whisper.transcribe(samples, language=language, vad_filter=vad, word_timestamps=True)
     lines: list[tuple[float, float, str]] = []
     for s in result:

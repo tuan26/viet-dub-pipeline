@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Nguồn video{% endblock %}
+{% block content %}
+<div class="row between"><h1>Nguồn video</h1>{% if allowed(user.role, 'admin') %}<a class="button primary" href="/source/new">＋ Thêm nguồn</a>{% endif %}</div>
+<p class="muted">Video từ nguồn <b>đã xác minh quyền</b> được tải và lồng tiếng tự động. Video từ nguồn khác dừng ở “Chờ xác minh quyền” cho tới khi quản trị viên xác nhận từng video.
+Hệ thống chỉ dùng API công khai, yt-dlp không đăng nhập và file bạn khai báo; không vượt CAPTCHA, DRM hay giới hạn truy cập.</p>
+<table>
+  <tr><th>Nguồn</th><th>Loại</th><th>Quyền sử dụng</th><th>Lịch kiểm tra</th><th>Lần cuối</th><th>Video</th><th></th></tr>
+  {% for s in sources %}
+  <tr class="{{ 'dim' if not s.enabled }}">
+    <td><b>{{ s.name }}</b>{% if not s.enabled %} <span class="badge g-off">tắt</span>{% endif %}
+      <br><small class="muted">{{ s.options.query or s.options.url or s.options.path or s.options.file or '' }}</small></td>
+    <td>{{ SOURCE_TYPES.get(s.type, s.type) }}</td>
+    <td>{% if s.rights == 'verified' %}<span class="badge g-done">đã xác minh</span>{% else %}<span class="badge g-wait">duyệt từng video</span>{% endif %}
+      {% if s.evidence %}<br><a href="/source/evidence?name={{ s.name|urlencode }}">bằng chứng</a>{% endif %}
+      {% if s.options.license %}<br><small class="muted">license: {{ s.options.license }}</small>{% endif %}</td>
+    <td>mỗi {{ '%g' % s.interval_minutes }} phút, tối đa {{ s.item_limit }} video</td>
+    <td>{{ s.last_checked|ago or 'chưa' }}{% if s.last_error %}<br><span class="bad small">{{ s.last_error }}</span>{% elif s.last_checked %}<br><small class="muted">{{ s.found or 0 }} mới</small>{% endif %}</td>
+    <td>{% set c = counts.get(s.name, {}) %}<a href="/videos?source={{ s.name|urlencode }}">{{ c.total or 0 }}</a>{% if c.waiting %}<br><a class="warnc" href="/videos?source={{ s.name|urlencode }}&state=AWAITING_RIGHTS">{{ c.waiting }} chờ quyền</a>{% endif %}</td>
+    <td class="actions">{% if allowed(user.role, 'admin') %}
+      <a class="button" href="/source/edit?name={{ s.name|urlencode }}">Sửa</a>
+      {% for act, label in (('check_now', 'Kiểm tra ngay'), ('disable' if s.enabled else 'enable', 'Tắt' if s.enabled else 'Bật')) %}
+      <form method="post" action="/source/action" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="name" value="{{ s.name }}"><input type="hidden" name="action" value="{{ act }}"><button>{{ label }}</button></form>{% endfor %}
+    {% endif %}</td>
+  </tr>
+  {% else %}<tr><td colspan="7" class="muted">Chưa có nguồn nào.</td></tr>{% endfor %}
+</table>
+{% endblock %}

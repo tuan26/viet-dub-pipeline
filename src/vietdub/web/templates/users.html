@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Tài khoản{% endblock %}
+{% block content %}
+<h1>Tài khoản</h1>
+<p class="muted">Chỉ xem: xem mọi thứ. Người duyệt: sửa bản dịch, giọng, duyệt/từ chối bản cuối, thử lại/tạm dừng job. Quản trị: thêm quản lý nguồn, xác nhận quyền sử dụng, xoá, quản lý tài khoản.</p>
+<table>
+  <tr><th>Tên</th><th>Vai trò</th><th>Trạng thái</th><th>Đăng nhập gần nhất</th><th></th></tr>
+  {% for u in users %}
+  <tr class="{{ 'dim' if u.disabled }}">
+    <td><b>{{ u.username }}</b></td>
+    <td><form method="post" action="/user/action" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="username" value="{{ u.username }}"><input type="hidden" name="action" value="role">
+      <select name="role" onchange="this.form.submit()">{% for r, label in ROLE_LABELS.items() %}<option value="{{ r }}" {{ 'selected' if r == u.role }}>{{ label }}</option>{% endfor %}</select></form></td>
+    <td>{{ 'Đã khoá' if u.disabled else 'Hoạt động' }}</td>
+    <td>{{ u.last_login|ago or 'chưa' }}</td>
+    <td class="actions">
+      <form method="post" action="/user/action" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="username" value="{{ u.username }}"><input type="hidden" name="action" value="{{ 'enable' if u.disabled else 'disable' }}"><button>{{ 'Mở khoá' if u.disabled else 'Khoá' }}</button></form>
+      <form method="post" action="/user/action" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="username" value="{{ u.username }}"><input type="hidden" name="action" value="password"><input name="password" type="password" minlength="8" placeholder="Mật khẩu mới" required><button>Đặt lại</button></form>
+    </td>
+  </tr>{% endfor %}
+</table>
+<form method="post" action="/users" class="card stack">
+  <h2>Tạo tài khoản</h2>
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <div class="grid3">
+    <label>Tên đăng nhập <input name="username" required pattern="[\w.\-]{3,30}"></label>
+    <label>Mật khẩu (≥ 8 ký tự) <input name="password" type="password" minlength="8" required></label>
+    <label>Vai trò <select name="role">{% for r, label in ROLE_LABELS.items() %}<option value="{{ r }}" {{ 'selected' if r == 'reviewer' }}>{{ label }}</option>{% endfor %}</select></label>
+  </div>
+  <button class="primary">Tạo tài khoản</button>
+</form>
+{% endblock %}

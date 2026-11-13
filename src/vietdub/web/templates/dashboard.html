@@ -1,0 +1,74 @@
+{% extends "base.html" %}{% from "_macros.html" import badge %}
+{% block title %}Tổng quan{% endblock %}
+{% block head %}<meta http-equiv="refresh" content="20">{% endblock %}
+{% block content %}
+<div class="row between">
+  <h1>Tổng quan</h1>
+  {% if allowed(user.role, 'admin') and not system_paused %}
+  <form method="post" action="/system"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="action" value="pause"><button>Tạm dừng toàn hệ thống</button></form>
+  {% endif %}
+</div>
+{% set s = stats.by_state %}
+<div class="tiles">
+  <a class="tile wait" href="/videos?group=wait"><b>{{ s.get('AWAITING_RIGHTS', 0) }}</b><span>Chờ xác minh quyền</span></a>
+  <a class="tile queue" href="/videos?group=queue"><b>{{ s.get('APPROVED', 0) + s.get('DOWNLOADED', 0) + s.get('DUBBED', 0) }}</b><span>Đang chờ xử lý</span></a>
+  <a class="tile busy" href="/videos?group=busy"><b>{{ s.get('DOWNLOADING', 0) + s.get('DUBBING', 0) + s.get('CHECKING', 0) }}</b><span>Đang xử lý</span></a>
+  <a class="tile review" href="/videos?group=review"><b>{{ s.get('NEEDS_REVIEW', 0) + s.get('QC_PASS', 0) }}</b><span>Cần duyệt</span></a>
+  <a class="tile done" href="/videos?state=READY"><b>{{ s.get('READY', 0) }}</b><span>Đã duyệt</span></a>
+  <a class="tile error" href="/videos?state=FAILED"><b>{{ s.get('FAILED', 0) }}</b><span>Lỗi</span></a>
+</div>
+
+<div class="grid2">
+  <section class="card">
+    <h2>Khối lượng</h2>
+    <dl class="kv">
+      <dt>Số video</dt><dd>{{ stats.videos }}</dd>
+      <dt>Tổng thời lượng</dt><dd>{{ '%.1f' % stats.minutes }} phút</dd>
+      <dt>Đã lồng tiếng xong</dt><dd>{{ '%.1f' % stats.minutes_dubbed }} phút</dd>
+      <dt>Lồng tiếng 24 giờ qua</dt><dd>{{ '%.1f' % stats.minutes_today }} / {{ '%.0f' % res.limits.daily_minutes }} phút hạn mức</dd>
+      <dt>Thời gian xử lý 24 giờ qua</dt><dd>{{ '%.0f' % (stats.processing_seconds_24h / 60) }} phút máy</dd>
+    </dl>
+  </section>
+  <section class="card">
+    <h2>Tài nguyên máy</h2>
+    <dl class="kv">
+      <dt>Ổ đĩa trống</dt><dd class="{{ 'bad' if res.disk_free_gb < res.limits.min_free_gb }}">{{ '%.1f' % res.disk_free_gb }} GB <span class="muted">(tối thiểu {{ res.limits.min_free_gb }} GB)</span></dd>
+      <dt>RAM trống</dt><dd class="{{ 'bad' if res.ram_free_gb is not none and res.ram_free_gb < res.limits.min_free_ram_gb }}">{{ '%.1f' % res.ram_free_gb if res.ram_free_gb is not none else '?' }} GB <span class="muted">(tối thiểu {{ res.limits.min_free_ram_gb }} GB)</span></dd>
+      <dt>Tải CPU (1 phút)</dt><dd>{{ '%.1f' % res.load if res.load is not none else '?' }} / {{ res.cpus }} nhân</dd>
+      <dt>Giới hạn</dt><dd class="muted">video ≤ {{ res.limits.max_video_minutes }} phút, file ≤ {{ res.limits.max_download_mb }} MB, thử lại tối đa {{ res.limits.max_attempts }} lần</dd>
+    </dl>
+  </section>
+</div>
+
+<section class="card">
+  <h2>Worker</h2>
+  {% if not workers %}<p class="muted">Chưa có worker nào chạy. Khởi động bằng <code>vietdub serve</code>.</p>{% else %}
+  <table><tr><th>Tên</th><th>Trạng thái</th><th>Đang làm</th><th>Báo hoạt động</th><th>Máy / PID</th></tr>
+  {% for w in workers %}<tr>
+    <td>{{ w.name }}</td>
+    <td>{% if not w.alive %}<span class="badge g-error">mất liên lạc</span>{% elif w.status == 'busy' %}<span class="badge g-busy">đang làm</span>{% elif w.status == 'paused' %}<span class="badge g-wait">tạm dừng</span>{% else %}<span class="badge g-done">rảnh</span>{% endif %}</td>
+    <td>{% if w.video_id and w.alive %}<a href="/video?id={{ w.video_id|urlencode }}">{{ w.video_id }}</a> <span class="muted">({{ w.stage }})</span>{% endif %}</td>
+    <td>{{ w.last_seen|ago }}</td><td class="muted">{{ w.host }} / {{ w.pid }}</td></tr>{% endfor %}
+  </table>{% endif %}
+</section>
+
+<section class="card">
+  <h2>Nguồn</h2>
+  <table><tr><th>Nguồn</th><th>Loại</th><th>Quyền</th><th>Kiểm tra lần cuối</th><th>Kết quả</th></tr>
+  {% for src in sources %}<tr class="{{ 'dim' if not src.enabled }}">
+    <td><a href="/source/edit?name={{ src.name|urlencode }}">{{ src.name }}</a>{% if not src.enabled %} <span class="muted">(tắt)</span>{% endif %}</td>
+    <td>{{ SOURCE_TYPES.get(src.type, src.type) }}</td>
+    <td>{% if src.rights == 'verified' %}<span class="badge g-done">đã xác minh</span>{% else %}<span class="badge g-wait">chờ duyệt từng video</span>{% endif %}</td>
+    <td>{{ src.last_checked|ago or 'chưa' }}</td>
+    <td>{% if src.last_error %}<span class="bad">{{ src.last_error }}</span>{% elif src.last_checked %}{{ src.found or 0 }} video mới{% endif %}</td></tr>
+  {% else %}<tr><td colspan="5" class="muted">Chưa có nguồn. <a href="/sources">Thêm nguồn</a>.</td></tr>{% endfor %}
+  </table>
+</section>
+
+<section class="card">
+  <h2>Nhật ký gần đây</h2>
+  <table class="log"><tr><th>Lúc</th><th>Video</th><th>Bước</th><th>Nội dung</th></tr>
+  {% for e in events %}<tr class="lv-{{ e.level }}"><td>{{ e.ts|ts }}</td><td>{% if e.video_id %}<a href="/video?id={{ e.video_id|urlencode }}">{{ e.video_id }}</a>{% endif %}</td><td>{{ e.stage }}</td><td>{{ e.message }}{% if e.username %} <span class="muted">— {{ e.username }}</span>{% endif %}</td></tr>{% endfor %}
+  </table>
+</section>
+{% endblock %}

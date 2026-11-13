@@ -1,0 +1,7 @@
+{% macro badge(state) -%}<span class="badge g-{{ STATE_GROUP.get(state, 'queue') }}">{{ STATE_LABELS.get(state, state) }}</span>{%- endmacro %}
+{% macro action(v, name, csrf, user, cls='') -%}
+{%- set spec = ACTIONS[name] -%}
+{%- if v.state in spec[0] and allowed(user.role, spec[1]) -%}
+<form method="post" action="/video/action" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="id" value="{{ v.id }}"><input type="hidden" name="action" value="{{ name }}"><button class="{{ cls }}">{{ spec[2] }}</button></form>
+{%- endif -%}
+{%- endmacro %}
