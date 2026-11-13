@@ -12,7 +12,7 @@ import secrets
 import time
 from pathlib import Path
 
-from ..models import VietdubError
+from ..models import TransientError, VietdubError
 
 # state -> the in-progress state a worker moves it to while working on it
 WORK = {"APPROVED": "DOWNLOADING", "DOWNLOADED": "DUBBING", "DUBBED": "CHECKING"}
@@ -46,7 +46,7 @@ class Store:
                 self.db = psycopg.connect(self.url, autocommit=True, row_factory=dict_row,
                                           client_encoding="utf8", connect_timeout=10)
             except psycopg.Error as exc:
-                raise VietdubError(f"Không kết nối được PostgreSQL: {exc}")
+                raise TransientError(f"Không kết nối được PostgreSQL: {exc}")
         else:
             import sqlite3
 
@@ -70,7 +70,15 @@ class Store:
             except psycopg.OperationalError:
                 if not (self.db.broken or self.db.closed):
                     raise
-                self._connect()
+                # the server went away (restart, network): wait for it a little before giving up
+                for wait in (0.5, 1, 2, 4, 8):
+                    try:
+                        self._connect()
+                        break
+                    except TransientError:
+                        time.sleep(wait)
+                else:
+                    self._connect()
                 cur = self.db.execute(query.replace("?", "%s"), params)
         else:
             cur = self.db.execute(query, params)

@@ -1,0 +1,9 @@
+.git
+.venv
+**/__pycache__
+library
+out
+work
+*.mp4
+*.wav
+models

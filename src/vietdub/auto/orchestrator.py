@@ -120,7 +120,13 @@ def dub(cfg: Config, store: Store, video: dict) -> dict:
     args = argparse.Namespace(**{k: (Path(v) if k in ("glossary", "speaker_model") and v else v) for k, v in cfg.dubbing.items()})
     out_dir = cfg.library / "dubbed" / _item(video).slug()
     job = cli._job(args, Path(video["path"]), out_dir, rights, None, args.lang or cli._language(video["language"] or ""))
-    job.log = lambda message: store.update(video["id"], progress=message.strip()[:200])
+    def progress(message: str) -> None:
+        try:
+            store.update(video["id"], progress=message.strip()[:200])
+        except Exception:
+            pass  # progress is only for display; a database hiccup must not stop the dub
+
+    job.log = progress
     started = time.time()
     pipeline.run(job)
     store.log(video["id"], "dub", "done", f"Lồng tiếng xong trong {time.time() - started:.0f}s", seconds=video["duration"])
@@ -207,7 +213,7 @@ def _attempt(cfg: Config, store: Store, video: dict, waiting_state: str, stage: 
         fields = fn(cfg, store, video)
         state = fields.pop("state")
         store.release(video["id"], state, error=fields.pop("error", None), **fields)
-        store.log(video["id"], stage, "info", f"→ {state}", time.time() - started)
+        store.log(video["id"], stage, "info", f"→ {state} [{video.get('locked_by') or ''}]", time.time() - started)
         return state
     except (KeyboardInterrupt, SystemExit):
         # stopped from outside: the video goes back to its queue, its work folder is kept
@@ -224,12 +230,12 @@ def _attempt(cfg: Config, store: Store, video: dict, waiting_state: str, stage: 
         attempts = video["attempts"] + 1
         if permanent or attempts >= cfg.limits["max_attempts"]:
             store.release(video["id"], "FAILED", attempts=attempts, error=detail)
-            store.log(video["id"], stage, "error", f"Dừng hẳn sau {attempts} lần: {detail}", time.time() - started)
+            store.log(video["id"], stage, "error", f"Dừng hẳn sau {attempts} lần [{video.get('locked_by') or ''}]: {detail}", time.time() - started)
             log(f"  {video['id']}: FAILED — {detail}")
             return "FAILED"
         delay = cfg.limits["retry_minutes"] * 60 * 2 ** (attempts - 1)
         store.release(video["id"], waiting_state, attempts=attempts, next_attempt_at=time.time() + delay, error=detail)
-        store.log(video["id"], stage, "warning", f"Lỗi lần {attempts}, thử lại sau {delay / 60:.0f} phút: {detail}", time.time() - started)
+        store.log(video["id"], stage, "warning", f"Lỗi lần {attempts} [{video.get('locked_by') or ''}], thử lại sau {delay:.0f}s: {detail}", time.time() - started)
         log(f"  {video['id']}: lỗi lần {attempts}, sẽ thử lại — {detail}")
         return waiting_state
 
@@ -297,13 +303,18 @@ def work(cfg: Config, store: Store, name: str, steps: Steps | None = None, max_c
     beat.start()
 
     def stop(signum, frame):
+        # one stop request is enough; a second one must not interrupt the clean-up below
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
         raise KeyboardInterrupt
 
     try:
         signal.signal(signal.SIGTERM, stop)
+        signal.signal(signal.SIGINT, stop)
     except ValueError:
         pass  # not the main thread (tests)
     cycles = 0
+    held: tuple[str, str] | None = None
     try:
         while max_cycles is None or cycles < max_cycles:
             cycles += 1
@@ -327,14 +338,24 @@ def work(cfg: Config, store: Store, name: str, steps: Steps | None = None, max_c
                     time.sleep(srv["poll_seconds"])
                     continue
                 beat.status, beat.video_id, beat.stage = "busy", video["id"], stage
+                held = (video["id"], waiting)
                 store.worker_beat(name, os.getpid(), socket.gethostname(), "busy", video["id"], stage)
                 log(f"{stage}: {video['id']}")
                 _attempt(cfg, store, video, waiting, stage, getattr(steps, fn_name), log)
+                held = None
                 beat.status, beat.video_id, beat.stage = "idle", None, None
             except (KeyboardInterrupt, SystemExit):
                 raise
             except Exception as exc:  # database gone for a moment, a bug in one step: keep the worker alive
                 log(f"Lỗi vòng lặp worker: {type(exc).__name__}: {exc}")
+                beat.status, beat.video_id, beat.stage = "idle", None, None  # stop vouching for the video
+                while held:  # a video this worker took must not stay locked: hand it back once the database answers
+                    try:
+                        store.release(held[0], held[1])
+                        store.log(held[0], "recover", "warning", f"{name} trả video về hàng đợi sau lỗi: {type(exc).__name__}")
+                        held = None
+                    except Exception:
+                        time.sleep(srv["poll_seconds"])
                 time.sleep(srv["poll_seconds"])
     except (KeyboardInterrupt, SystemExit):
         log("Worker dừng.")

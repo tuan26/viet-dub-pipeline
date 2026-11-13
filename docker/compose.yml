@@ -1,0 +1,30 @@
+# docker compose -f docker/compose.yml up -d
+# Dashboard: http://127.0.0.1:8800  (first visit creates the admin account)
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: vietdub
+      POSTGRES_PASSWORD: change-me
+      POSTGRES_DB: vietdub
+    volumes: [db:/var/lib/postgresql/data]
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U vietdub"], interval: 5s, retries: 20}
+    restart: unless-stopped
+
+  ollama:                      # local translation model; remove if you use another endpoint
+    image: ollama/ollama
+    volumes: [ollama:/root/.ollama]
+    restart: unless-stopped
+
+  vietdub:
+    build: ..
+    depends_on: {db: {condition: service_healthy}}
+    volumes:
+      - ./pipeline.toml:/data/pipeline.toml:ro
+      - data:/data/library
+      - ./models:/data/models:ro
+      - ./videos:/data/videos:ro      # for "folder" sources
+    ports: ["127.0.0.1:8800:8800"]   # only this machine; put an HTTPS proxy in front to expose it
+    restart: unless-stopped
+
+volumes: {db: {}, ollama: {}, data: {}}

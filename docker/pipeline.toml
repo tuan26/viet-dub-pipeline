@@ -1,0 +1,18 @@
+# Configuration used by docker/compose.yml. Sources are added in the dashboard.
+[storage]
+database = "postgresql://vietdub:change-me@db:5432/vietdub"
+library = "library"
+
+[server]
+workers = 1
+cpu_threads = 4
+
+[dubbing]
+asr_model = "small"
+translator = "ollama"
+base_url = "http://ollama:11434/v1"
+model = "gemma3:12b"
+tts = "edge"
+separate = true
+speakers = "auto"
+speaker_model = "models/3dspeaker_speech_eres2net_sv_en_voxceleb_16k.onnx"

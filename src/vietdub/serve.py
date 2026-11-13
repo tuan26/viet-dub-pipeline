@@ -20,6 +20,18 @@ from .auto.orchestrator import import_sources
 from .auto.store import Store
 
 
+def _detach_and_follow_parent() -> None:
+    """Runs in each worker right after fork: its own session (so a Ctrl+C in the terminal
+    reaches only `serve`), and on Linux a SIGTERM if `serve` dies without cleaning up."""
+    os.setsid()
+    try:
+        import ctypes
+
+        ctypes.CDLL("libc.so.6", use_errno=True).prctl(1, signal.SIGTERM)  # PR_SET_PDEATHSIG
+    except Exception:
+        pass
+
+
 def worker_env(server: dict) -> dict:
     env = dict(os.environ)
     if server.get("cpu_threads"):
@@ -39,7 +51,7 @@ class Supervisor(threading.Thread):
 
     def _start(self, name: str) -> None:
         cmd = [sys.executable, "-m", "vietdub.cli", "auto", "worker", "--config", str(self.config_path), "--name", name]
-        self.procs[name] = subprocess.Popen(cmd, env=worker_env(self.server), start_new_session=True)
+        self.procs[name] = subprocess.Popen(cmd, env=worker_env(self.server), preexec_fn=_detach_and_follow_parent)
         print(f"[serve] khởi động {name} (pid {self.procs[name].pid})", flush=True)
 
     def run(self) -> None:
@@ -92,8 +104,13 @@ def serve(config_path: Path, host: str | None, port: int | None, workers: int | 
     host, port = host or cfg.server["host"], port or cfg.server["port"]
     if not store.users():
         print(f"[serve] chưa có tài khoản nào: mở http://{host}:{port}/setup để tạo tài khoản quản trị", flush=True)
+    # uvicorn re-raises SIGTERM after its own shutdown; with this handler that becomes a normal
+    # exit, so the workers below are stopped instead of being left running
+    signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
     try:
         uvicorn.run(create_app(cfg.path), host=host, port=port, log_level="warning")
     finally:
+        print("[serve] đang dừng các worker…", flush=True)
         supervisor.stop()
+        print("[serve] đã dừng.", flush=True)
     return 0
