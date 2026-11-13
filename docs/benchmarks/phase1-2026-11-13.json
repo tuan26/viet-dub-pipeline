@@ -1,0 +1,191 @@
+[
+ {
+  "scenario": "s1_two_workers",
+  "ok": true,
+  "evidence": {
+   "videos": 6,
+   "dub_runs_per_video": {
+    "clip2.mp4": [
+     "w1"
+    ],
+    "clip1.mp4": [
+     "w2"
+    ],
+    "clip3.mp4": [
+     "w1"
+    ],
+    "clip4.mp4": [
+     "w2"
+    ],
+    "clip6.mp4": [
+     "w2"
+    ],
+    "clip5.mp4": [
+     "w1"
+    ]
+   },
+   "videos_per_worker": {
+    "w1": 3,
+    "w2": 3
+   },
+   "ran_at_same_time": true,
+   "wall_seconds": 36,
+   "sum_of_step_seconds": 65
+  },
+  "run": "2026-11-13 lần 1"
+ },
+ {
+  "scenario": "s2_auto_retry",
+  "ok": true,
+  "evidence": {
+   "first_error": "Lỗi lần 1 [w1], thử lại sau 6s: Gọi bộ dịch tại http://127.0.0.1:8099/v1 thất bại: <urlopen error [Errno 111] Connection refused>",
+   "state_after_error": "DOWNLOADED",
+   "attempts_after_error": 1,
+   "retry_in_seconds": 6,
+   "final_state": "QC_PASS",
+   "attempts_recorded": 1
+  },
+  "run": "2026-11-13 lần 1"
+ },
+ {
+  "scenario": "s3_give_up_then_manual_retry",
+  "ok": true,
+  "evidence": {
+   "state": "FAILED",
+   "attempts": 2,
+   "error": "Gọi bộ dịch tại http://127.0.0.1:8099/v1 thất bại: <urlopen error [Errno 111] Connection refused>",
+   "log": [
+    "Lỗi lần 1 [w1], thử lại sau 6s: Gọi bộ dịch tại http://127.0.0.1:8099/v1 thất bại: <urlopen error [Errno 111] Connection",
+    "Dừng hẳn sau 2 lần [w1]: Gọi bộ dịch tại http://127.0.0.1:8099/v1 thất bại: <urlopen error [Errno 111] Connection refuse"
+   ],
+   "after_manual_retry": "NEEDS_REVIEW"
+  },
+  "run": "2026-11-13 lần 1"
+ },
+ {
+  "scenario": "s4_kill9_recovery_and_heartbeat",
+  "ok": true,
+  "evidence": {
+   "busy_worker": "wB",
+   "seconds_alive_on_job_before_kill": 17,
+   "stale_limit_seconds": 6,
+   "recovered_while_alive": 0,
+   "progress_when_killed": "[4/6] Tạo giọng đọc cho 25 câu",
+   "state_5s_after_kill": "DUBBING",
+   "recovered_after_seconds": 5,
+   "recover_message": "Trả lại hàng đợi: wB ngừng báo hoạt động khi đang ở DUBBING",
+   "finished_by": "→ DUBBED [wA]",
+   "speech_to_text_seconds_total": 16.09
+  },
+  "run": "2026-11-13 lần 2"
+ },
+ {
+  "scenario": "s5_postgres_restart",
+  "ok": true,
+  "evidence": {
+   "pg_restart_seconds": 0.3,
+   "pg_ctl_ok": true,
+   "video_during_restart": "QC_PASS",
+   "attempts": 0,
+   "new_video_after_restart": [
+    "QC_PASS",
+    "QC_PASS"
+   ],
+   "worker_loop_errors": []
+  },
+  "run": "2026-11-13 lần 2"
+ },
+ {
+  "scenario": "s6_schedule_and_dedup",
+  "ok": true,
+  "evidence": {
+   "videos_after_15s_idle": 1,
+   "new_file_found_after_seconds": 1,
+   "last_checked_advanced": true,
+   "states": {
+    "clip4.mp4": "NEEDS_REVIEW",
+    "clip5.mp4": "QC_PASS",
+    "copy_of_clip4.mp4": "DUPLICATE"
+   },
+   "dub_runs": 2
+  },
+  "run": "2026-11-13 lần 2"
+ },
+ {
+  "scenario": "s7_limits",
+  "ok": true,
+  "evidence": {
+   "disk": {
+    "state": "APPROVED",
+    "attempts": 1,
+    "error": "Đĩa chỉ còn 6.8 GB, dưới mức tối thiểu 100000 GB.",
+    "next_attempt_in_minutes": 0.0
+   },
+   "ram": {
+    "state": "DOWNLOADED",
+    "attempts": 1,
+    "error": "RAM trống 15.8 GB, dưới mức tối thiểu 100000 GB.",
+    "next_attempt_in_minutes": 0.0
+   },
+   "daily": {
+    "state": "DOWNLOADED",
+    "attempts": 0,
+    "error": "Hết hạn mức hôm nay (0/0 phút); chờ sang ngày mai.",
+    "next_attempt_in_minutes": 1170.4
+   },
+   "length": {
+    "state": "FAILED",
+    "attempts": 1,
+    "error": "Video dài 0.3 phút, vượt giới hạn 0.1 phút.",
+    "next_attempt_in_minutes": 0
+   }
+  },
+  "run": "2026-11-13 lần 2"
+ },
+ {
+  "scenario": "s8_serve_supervisor_web_and_states",
+  "ok": false,
+  "evidence": {
+   "worker_env": [
+    "OMP_NUM_THREADS=2"
+   ],
+   "worker_nice": 7,
+   "killed_pid": 21451,
+   "restarted_pid": 21601,
+   "awaiting_after_8s": "AWAITING_RIGHTS",
+   "state_while_paused": "APPROVED",
+   "final": {
+    "clip1.mp4": "READY",
+    "clip2.mp4": "NEEDS_REVIEW"
+   },
+   "after_sigterm": {
+    "worker-1": "idle",
+    "worker-2": "idle"
+   }
+  },
+  "run": "2026-11-13 lần 2 — KHÔNG ĐẠT, xem báo cáo"
+ },
+ {
+  "scenario": "s8_serve_supervisor_web_and_states",
+  "ok": true,
+  "evidence": {
+   "worker_env": [
+    "OMP_NUM_THREADS=2"
+   ],
+   "worker_nice": 7,
+   "killed_pid": 22093,
+   "restarted_pid": 22120,
+   "awaiting_after_8s": "AWAITING_RIGHTS",
+   "state_while_paused": "APPROVED",
+   "final": {
+    "clip1.mp4": "READY",
+    "clip2.mp4": "NEEDS_REVIEW"
+   },
+   "after_sigterm": {
+    "worker-1": "stopped",
+    "worker-2": "stopped"
+   }
+  },
+  "run": "2026-11-13 lần 4 (sau khi sửa lỗi)"
+ }
+]

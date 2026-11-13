@@ -113,7 +113,8 @@
     const c = changes();
     const buttons = document.querySelectorAll("#save, #save-render"); buttons.forEach(b => b.disabled = true);
     try {
-      const res = await post("/review/save", { id: cfg.id, lines: c.lines, cast: c.cast, then });
+      const confirm = document.getElementById("confirm-speakers");
+      const res = await post("/review/save", { id: cfg.id, lines: c.lines, cast: c.cast, then, confirm_speakers: !!(confirm && confirm.checked) });
       show(res.message, "ok");
       rows.forEach(r => { const sel = r.querySelector("select.speaker"); r._start = { speaker: sel ? sel.value : null, tr: r.querySelector("textarea.tr").value, skip: r.querySelector("input.skip").checked }; });
       castRows().forEach(r => r._voice = r.querySelector("select.voice").value);

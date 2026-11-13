@@ -332,7 +332,7 @@ def create_app(config_path: Path) -> Starlette:
         report = data["report"]
         version = int((out / report["output"]).stat().st_mtime) if report.get("output") and (out / report["output"]).exists() else 0
         can_edit = allowed(request.state.user["role"], "reviewer") and v["state"] in EDITABLE
-        return render(request, "review.html", v=v, data=data, version=version, can_edit=can_edit,
+        return render(request, "review.html", v=v, data=data, media_version=version, can_edit=can_edit,
                       edits=db().edits(v["id"], 50), editable_states=[STATE_LABELS[s] for s in EDITABLE])
 
     @guard("reviewer")
@@ -346,7 +346,8 @@ def create_app(config_path: Path) -> Starlette:
         u = request.state.user["username"]
         try:
             summary = await run_in_threadpool(review_edit.apply, db(), v["id"], Path(v["out_dir"]), u,
-                                              list(body.get("lines") or []), dict(body.get("cast") or {}))
+                                              list(body.get("lines") or []), dict(body.get("cast") or {}),
+                                              bool(body.get("confirm_speakers")))
         except VietdubError as exc:
             return JSONResponse({"error": str(exc)}, status_code=400)
         store = db()

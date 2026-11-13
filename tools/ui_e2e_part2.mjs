@@ -2,7 +2,8 @@
 // review page, listens to a preview, saves and re-exports, then approves and downloads.
 //   node tools/ui_e2e_part2.mjs BASE VIDEO_URL plan.json SHOTS_DIR OUT.mp4
 // plan.json: {"speakers": {"12": "THOM"}, "translations": {"3": "..."}, "voices": {"THOM": "Nam — NamMinh (gốc)"}, "preview": 3}
-import { chromium } from "playwright";
+import { createRequire } from "node:module";
+const { chromium } = createRequire(import.meta.url)("playwright");
 import { readFileSync } from "node:fs";
 
 const [base, videoUrl, planFile, shots, outFile] = process.argv.slice(2);
@@ -40,6 +41,7 @@ for (const index of plan.skip || []) await page.check(`#lines tr[data-index="${i
 for (const [name, label] of Object.entries(plan.voices || {})) {
   await page.locator(`#cast tr[data-speaker="${name}"] select.voice`).selectOption({ label });
 }
+if (plan.confirm_speakers) await page.check("#confirm-speakers");
 step("đã sửa: " + (await page.textContent("#dirty")));
 
 // listen to one edited line before saving

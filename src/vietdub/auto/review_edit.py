@@ -88,7 +88,8 @@ def _invalidate(clips: Path, index: int) -> int:
     return removed
 
 
-def apply(store, video_id: str, out_dir: Path, username: str, lines: list[dict], cast: dict[str, str]) -> dict:
+def apply(store, video_id: str, out_dir: Path, username: str, lines: list[dict], cast: dict[str, str],
+          confirm_speakers: bool = False) -> dict:
     """Apply a reviewer's changes. ``lines``: [{"index", "translation"?, "speaker"?, "skip"?}];
     ``cast``: {speaker: voice id}. Speakers given a voice here count as confirmed by ``username``."""
     work = out_dir / "work"
@@ -131,6 +132,13 @@ def apply(store, video_id: str, out_dir: Path, username: str, lines: list[dict],
                 stale.add(index)
                 changed += 1
                 speakers.setdefault(new, {"suggested_gender": "", "pitch_hz": 0})
+    if confirm_speakers and speakers:
+        unsure = [s for s in segments if s.get("uncertain")]
+        for s in unsure:
+            s["uncertain"] = False
+        if unsure:
+            store.record_edit(video_id, username, "confirm_speakers", None, "uncertain",
+                              ", ".join(str(s["index"]) for s in unsure), "đã kiểm tra")
     voice_changes = 0
     if speakers:
         now = time.time()

@@ -67,35 +67,31 @@ Gán vai tự động đúng khoảng 89% số câu trên ba clip thử (nhãn n
 `--review` trước khi phát hành. Số đo: `docs/evaluation-2026-11-12.md` và `docs/quality-evaluation.md`.
 Model dịch mặc định là `gemma3:12b` (35/39 trên bộ test dịch, so với 18/39 của `qwen2.5:7b`); cần khoảng 14 GB RAM.
 
-## Luồng tự động
-
-Khai báo nguồn và giới hạn trong `pipeline.toml` (mẫu: `docs/pipeline.example.toml`), rồi:
+## Dashboard web và luồng tự động
 
 ```bash
-pip install -e '.[asr,tts,speakers,separate,ingest,auto]'
+pip install -e '.[all]'
 ```
 
 ```bash
-vietdub auto run --dry-run
+vietdub serve --config pipeline.toml
 ```
 
-```bash
-vietdub auto run --every 60
-```
+Mở http://127.0.0.1:8800: lần đầu tạo tài khoản quản trị, sau đó mọi việc làm trên trình duyệt — thêm nguồn, xác nhận
+quyền sử dụng, theo dõi worker, duyệt bản lồng tiếng (nghe từng câu, sửa bản dịch, người nói, giọng), xuất lại, duyệt bản
+cuối và tải MP4. Hướng dẫn đầy đủ: `docs/INSTALL.md`.
 
-Mỗi vòng: kiểm tra các nguồn đến hạn → tải video mới → lồng tiếng → kiểm tra chất lượng → dừng chờ người duyệt.
+| Trạng thái | Nghĩa |
+|---|---|
+| Chờ xác minh quyền | Nguồn chưa có căn cứ về quyền sử dụng; quản trị viên xác nhận từng video |
+| Chờ tải / Chờ lồng tiếng / Chờ kiểm tra | Trong hàng đợi của worker |
+| Cần duyệt | Kiểm tra tự động thấy điểm cần xem |
+| Đạt kiểm tra — chờ duyệt | Qua mọi tiêu chí tự động, vẫn cần người duyệt |
+| Đã duyệt | Người duyệt đã chấp nhận bản cuối |
+| Lỗi | Không tự khắc phục được, hoặc đã thử lại đủ số lần |
 
-| Trạng thái | Nghĩa | Lệnh của bạn |
-|---|---|---|
-| `AWAITING_RIGHTS` | Nguồn chưa có căn cứ về quyền sử dụng | `vietdub auto allow <id> --note "căn cứ"` hoặc `deny` |
-| `NEEDS_REVIEW` | Kiểm tra tự động thấy điểm cần xem (lý do trong `auto status`) | `approve --note`, `reject`, `redo` |
-| `QC_PASS` | Qua mọi phép kiểm, vẫn chờ bạn duyệt | `approve --note`, `reject` |
-| `READY` | Bạn đã duyệt bản lồng tiếng | — (chưa có chức năng đăng) |
-| `FAILED` | Lỗi không tự khắc phục được, hoặc đã thử lại đủ số lần | `retry` sau khi xử lý nguyên nhân |
-| `DUPLICATE` | Trùng nội dung với video khác | — |
-
-`vietdub auto status`, `vietdub auto log <id>` và `vietdub auto dashboard` (ghi `dashboard.html`) cho biết chuyện gì đang xảy ra.
-Hệ thống chưa đăng gì lên nền tảng nào; hiện trạng so với mục tiêu ở `docs/roadmap-gap-analysis.md`.
+Hệ thống chưa đăng gì lên nền tảng nào. Hiện trạng so với mục tiêu: `docs/roadmap-gap-analysis.md`.
+Các lệnh `vietdub auto ...` vẫn dùng được cho máy chủ không có giao diện.
 
 ## Tự tìm và tải video
 

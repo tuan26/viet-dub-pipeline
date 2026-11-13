@@ -16,7 +16,7 @@ code { font-size: 12px; }
 .top { display: flex; align-items: center; gap: 18px; padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 .brand { font-weight: 700; font-size: 17px; color: var(--text); }
 .top nav { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
-.top nav a { padding: 6px 10px; border-radius: 6px; color: var(--muted); }
+.top nav a { padding: 6px 10px; border-radius: 6px; color: var(--muted); white-space: nowrap; }
 .top nav a.on { background: var(--busy-bg); color: var(--accent); }
 .me { display: flex; gap: 10px; align-items: center; color: var(--muted); font-size: 13px; }
 .soon { font-size: 10px; text-transform: uppercase; background: var(--off-bg); color: var(--off); padding: 1px 5px; border-radius: 4px; vertical-align: middle; }
@@ -84,6 +84,8 @@ table.lines tr.dirty td { background: var(--busy-bg); } table.lines tr.skipped t
 .old { color: var(--bad); text-decoration: line-through; } .new { color: var(--ok); }
 #cast audio { height: 30px; width: 200px; }
 @media (max-width: 760px) {
+  .top { gap: 8px 12px; padding: 10px 16px; } .top nav { order: 3; flex: 1 1 100%; overflow-x: auto; flex-wrap: nowrap; }
+  .me { margin-left: auto; }
   .players { grid-template-columns: 1fr; } .kv { grid-template-columns: 1fr; }
   table { display: block; overflow-x: auto; } main { padding: 12px 16px 30px; }
 }

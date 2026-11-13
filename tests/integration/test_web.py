@@ -222,3 +222,42 @@ def test_last_admin_cannot_be_removed(project):
     add_user(c, token, "boss2", "reviewer")
     c.post("/user/action", data={"csrf": token, "username": "admin", "action": "disable"})
     assert Store(auto_config.load(project / "pipeline.toml").database).user("admin")["disabled"] == 0
+
+
+def test_reviewer_confirms_speakers_and_cast(project, monkeypatch):
+    from vietdub.auto import review_edit
+    from vietdub.engines import casting
+
+    cfg, store, vid = processed(project)
+    out = Path(store.get(vid)["out_dir"])
+    segs = json.loads((out / "work" / "segments.json").read_text())
+    for s, (who, unsure) in zip(segs, [("S1", True), ("S2", False), ("S1", True)]):
+        s["speaker"], s["uncertain"] = who, unsure
+    (out / "work" / "segments.json").write_text(json.dumps(segs))
+    (out / "work" / "speakers.json").write_text(json.dumps({"S1": {"suggested_gender": "female"}, "S2": {"suggested_gender": "female"}}))
+    store.update(vid, state="NEEDS_REVIEW")
+    c = client(project)
+    token = setup_admin(c)
+    male = review_edit.voice_id(casting.EDGE_VOICES["male"])
+    female = review_edit.voice_id(casting.EDGE_VOICES["female"])
+    r = c.post("/review/save", headers={"X-CSRF": token}, json={
+        "id": vid, "lines": [{"index": 3, "speaker": "HERO"}], "cast": {"S1": male, "S2": female, "HERO": female},
+        "confirm_speakers": True})
+    assert r.status_code == 200, r.text
+    spk = json.loads((out / "work" / "speakers.json").read_text())
+    assert set(spk) == {"S1", "S2", "HERO"} and all(v["confirmed_by"] == "admin" for v in spk.values())
+    assert spk["S1"]["voice"] == casting.EDGE_VOICES["male"] and spk["S1"]["gender"] == "male"
+    assert not any(s["uncertain"] for s in json.loads((out / "work" / "segments.json").read_text()))
+    assert {"speaker", "voice", "confirm_speakers"} <= {e["kind"] for e in store.edits(vid)}
+    r = c.post("/review/save", headers={"X-CSRF": token}, json={"id": vid, "lines": [{"index": 1, "speaker": "bad/name"}], "cast": {}})
+    assert r.status_code == 400
+
+
+def test_review_page_keeps_the_software_version_in_the_footer(project):
+    from vietdub import __version__
+
+    _, _, vid = processed(project)
+    c = client(project)
+    setup_admin(c)
+    page = c.get(f"/review?id={quote(vid)}").text
+    assert f"vietdub {__version__}</footer>" in page and f"/static/review.js?v={__version__}" in page

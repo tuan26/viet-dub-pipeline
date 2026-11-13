@@ -1,7 +1,8 @@
 // Browser end-to-end, part 1: a person sets up the dashboard, adds a source, confirms the
 // rights of the discovered video, and waits until the workers have dubbed and checked it.
 //   node tools/ui_e2e_part1.mjs http://127.0.0.1:8800 /path/to/videos /path/to/screenshots
-import { chromium } from "playwright";
+import { createRequire } from "node:module";
+const { chromium } = createRequire(import.meta.url)("playwright");
 
 const [base, videosDir, shots] = process.argv.slice(2);
 const browser = await chromium.launch();

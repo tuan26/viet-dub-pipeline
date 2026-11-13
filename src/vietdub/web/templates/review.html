@@ -9,6 +9,7 @@
   {% if can_edit %}
   <div class="toolbar">
     <span id="dirty" class="muted"></span>
+    {% if data.speakers_enabled %}<label class="check small"><input type="checkbox" id="confirm-speakers"> Đã kiểm tra người nói của mọi câu</label>{% endif %}
     <button id="save" type="button">Lưu</button>
     <button id="save-render" type="button" class="primary">Lưu và xuất lại video</button>
   </div>
@@ -20,12 +21,12 @@
 <div class="players">
   <figure><figcaption>Bản gốc</figcaption><video id="orig" controls preload="metadata" src="/media?id={{ v.id|urlencode }}&kind=original"></video></figure>
   <figure><figcaption>Bản lồng tiếng {% if data.report.speakers_reviewed %}<span class="badge g-done">vai đã duyệt</span>{% elif data.speakers_enabled %}<span class="badge g-wait">vai do máy gán</span>{% endif %}</figcaption>
-    <video id="dub" controls preload="metadata" src="/media?id={{ v.id|urlencode }}&kind=dubbed&v={{ version }}"></video></figure>
+    <video id="dub" controls preload="metadata" src="/media?id={{ v.id|urlencode }}&kind=dubbed&v={{ media_version }}"></video></figure>
 </div>
 
 {% if qc %}
 <section class="card">
-  <div class="row between"><h2>Kiểm tra tự động: {{ badge(qc.status) }}</h2>
+  <div class="row between"><h2>Kiểm tra tự động: {% if qc.status == "QC_PASS" %}<span class="badge g-done">đạt mọi tiêu chí</span>{% else %}<span class="badge g-review">có điểm cần xem</span>{% endif %}</h2>
     <span>{% if qc.critical %}<span class="bad">{{ qc.critical }} lỗi nghiêm trọng</span>{% endif %} {% if qc.warnings %}<span class="warnc">{{ qc.warnings }} cảnh báo</span>{% endif %}</span></div>
   <ul class="qc-list">
   {% for c in qc.checks if not c.ok %}<li class="{{ 'bad' if c.severity == 'critical' else 'warnc' }}">{{ 'Nghiêm trọng' if c.severity == 'critical' else 'Cảnh báo' }}: {{ c.label or c.name }} — {{ c.detail or c.value }}</li>{% endfor %}

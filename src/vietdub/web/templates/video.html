@@ -59,7 +59,7 @@
 
 {% if qc %}
 <section class="card">
-  <h2>Kiểm tra tự động: {{ badge(qc.status) }}</h2>
+  <h2>Kiểm tra tự động: {% if qc.status == "QC_PASS" %}<span class="badge g-done">đạt mọi tiêu chí</span>{% else %}<span class="badge g-review">có điểm cần xem</span>{% endif %}</h2>
   <p class="muted small">{{ qc.disclaimer }}</p>
   <table><tr><th>Tiêu chí</th><th>Mức</th><th>Kết quả</th><th>Giá trị</th><th>Chi tiết</th></tr>
   {% for c in qc.checks %}<tr class="{{ '' if c.ok else ('row-bad' if c.severity == 'critical' else 'row-warn') }}">

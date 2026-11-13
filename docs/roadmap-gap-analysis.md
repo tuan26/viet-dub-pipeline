@@ -1,6 +1,8 @@
-# Gap analysis: hiện trạng so với hệ thống tự động mục tiêu (2026-11-12)
+# Gap analysis: hiện trạng so với hệ thống tự động mục tiêu (cập nhật 2026-11-13)
 
 Diễn biến và số đo của lần chạy thật: `docs/auto-e2e-2026-11-12.md`.
+Kiểm chứng Phase 1 bằng tiến trình thật (2026-11-13): `docs/phase1-verification-2026-11-13.md` — 8/8 kịch bản đạt.
+Dashboard và trang duyệt (2026-11-13): `specs/007-web-dashboard/`, hướng dẫn cài đặt `docs/INSTALL.md`.
 
 Luồng mục tiêu: Auto Crawler → Download/Ingest → AI Dubbing → Automated QC → Optional Human Review →
 Video Processing → Publish YouTube/Facebook/TikTok.
@@ -18,19 +20,19 @@ Cột "Kiểm chứng": **thật** = đã chạy với dữ liệu và dịch v�
 | 4. Tải và đưa vào hàng đợi | Tải tay | Hàng đợi trạng thái trong PostgreSQL | Tải trực tiếp: thật. Qua yt-dlp: chưa |
 | 5. Tự gọi pipeline lồng tiếng | `batch` chạy tay | Bước `dub` gọi engine hiện có, không sửa engine | Thật |
 | 6. Trạng thái, log, thời gian, lỗi | `catalog.json`, `report.json` | Bảng `videos`, `events`, `sources` | Thật |
-| 7. Retry, resume, tránh xử lý trùng | Resume trong một video | Lỗi tạm thời thử lại có giãn cách; lỗi vĩnh viễn dừng ngay; nhận việc nguyên tử; khôi phục việc bỏ dở | Tránh trùng, dừng ngay khi lỗi vĩnh viễn, `auto retry`/`redo` tiếp tục từ kết quả cũ: thật. Thử lại tự động, khôi phục việc bỏ dở: test |
+| 7. Retry, resume, tránh xử lý trùng | Resume trong một video | Lỗi tạm thời thử lại có giãn cách; lỗi vĩnh viễn dừng ngay; nhận việc nguyên tử; heartbeat; khôi phục việc bỏ dở | Thật (2026-11-13): hai worker song song, tự thử lại, kill -9, khởi động lại PostgreSQL |
 | 8. Nguồn chưa xác minh phải chờ duyệt | Mục `found` chờ `approve` | `AWAITING_RIGHTS`; `rights = "verified"` bị từ chối nếu thiếu căn cứ | Thật |
 
 ## Phase 2 — Automated QC & Human Review
 
 | Yêu cầu | Hiện trạng | Kiểm chứng |
 |---|---|---|
-| 1. Kiểm tra sót thoại, chưa dịch, speaker, âm thanh, thời lượng, lỗi MP4 | `auto/qc.py`: 9–11 phép kiểm, ghi `qc.json` | Thật |
-| 2. Phân loại QC_PASS / NEEDS_REVIEW | Có | Thật |
-| 3. Giao diện local xem video, nghe từng câu, sửa dịch/speaker/giọng | **Chưa có.** Hiện chỉ có file `lines.tsv`, `cast.json` của `--review` và trang trạng thái chỉ đọc | — |
-| 4. Xuất lại sau khi sửa | `auto redo` lồng tiếng lại; sửa trong luồng tự động chưa nối với `--review` | Test |
-| 5. Lịch sử chỉnh sửa | Bảng `events` ghi mọi quyết định của người (`allow`, `approve`...) kèm ghi chú; chưa ghi từng chỉnh sửa câu | Thật (mức quyết định) |
-| 6. Không tự đăng khi chưa duyệt | Chưa có chức năng đăng nào; `READY` chỉ đạt được qua `auto approve` | Thật |
+| 1. Kiểm tra sót thoại, chưa dịch, speaker, âm thanh, thời lượng, lỗi MP4 | `auto/qc.py`: 9–11 tiêu chí, mức nghiêm trọng/cảnh báo, cờ từng câu, đoạn có thể sót | Thật |
+| 2. Phân loại QC_PASS / NEEDS_REVIEW | Có, kèm lưu ý QC_PASS không chứng minh bản dịch đúng hay quyền đủ | Thật |
+| 3. Giao diện local xem video, nghe từng câu, sửa dịch/speaker/giọng | Dashboard web (`vietdub serve`) | Thật, bằng trình duyệt (Playwright) |
+| 4. Xuất lại sau khi sửa | Chỉ làm lại câu bị sửa | Thật |
+| 5. Lịch sử chỉnh sửa | Bảng `edits`: ai, lúc nào, câu nào, trước/sau; quyết định ghi trong nhật ký | Thật |
+| 6. Không tự đăng khi chưa duyệt | Chưa có chức năng đăng; `READY` chỉ qua người duyệt | Thật |
 
 ## Phase 3 — Content Production: chưa làm
 
@@ -49,12 +51,12 @@ Cần bạn tạo ứng dụng và cấp quyền trên từng nền tảng; TikT
 | Python, PostgreSQL, FFmpeg | Có. PostgreSQL 16 đã chạy thật; SQLite cho máy đơn và test |
 | Giữ engine, không viết lại | Engine không bị sửa trong đợt này ngoài việc phân loại lỗi tạm thời |
 | Module độc lập, thay được | `auto/` gồm store, config, sources, orchestrator, qc, dashboard; các bước truyền vào qua `Steps` |
-| Dashboard | Trang HTML chỉ đọc (`auto dashboard`) + `auto status`; chưa có thao tác trên trang |
+| Dashboard | Web app có đăng nhập và vai trò (`vietdub serve`) |
 | Dry-run | `auto run --dry-run`: chỉ liệt kê, không ghi/tải/lồng tiếng. Dry-run cho việc đăng: chưa (chưa có đăng) |
-| Kiểm soát chi phí, CPU/RAM, dung lượng, số worker | Hạn mức phút/ngày, giới hạn độ dài và dung lượng, ngưỡng đĩa và RAM trống, số mục mỗi vòng. Nhiều worker: cơ chế nhận việc đã test trên PostgreSQL, chưa chạy 2 worker thật cùng lúc. Chưa giới hạn CPU |
+| Kiểm soát chi phí, CPU/RAM, dung lượng, số worker | Hạn mức phút/ngày, giới hạn độ dài và dung lượng, ngưỡng đĩa và RAM trống, số worker, số luồng CPU và mức nice. Đã chạy thật, trừ việc đo hiệu quả giới hạn CPU |
 | Không vượt CAPTCHA, DRM, giới hạn truy cập | Chỉ dùng API công khai, yt-dlp không cookie, file người dùng khai báo. Không có mã nào xử lý CAPTCHA/DRM |
 
 ## Thứ tự đề xuất tiếp theo
-1. Chạy `auto run --every` liên tục một ngày với nguồn thật của bạn để kiểm chứng lịch, retry và khôi phục.
-2. Phase 2.3: giao diện duyệt local (nối với `review.py` hiện có) — phần còn thiếu lớn nhất trước khi phát hành.
-3. Phase 3 rồi Phase 4, bắt đầu từ YouTube ở chế độ dry-run và đăng riêng tư.
+1. Chạy `vietdub serve` liên tục vài ngày với nguồn thật của bạn; build và chạy thử Docker trên máy có Docker.
+2. Phase 3 (tạo nội dung) bắt đầu từ bản 9:16 và thumbnail, có bước duyệt riêng.
+3. Phase 4 bắt đầu từ YouTube ở chế độ chạy thử và đăng riêng tư.

@@ -92,6 +92,9 @@ WantedBy=multi-user.target
 
 ## 5. Dùng hằng ngày (không cần dòng lệnh)
 
+Ảnh chụp các màn hình chính: `docs/screenshots/`. Một lượt dùng thật từ đầu đến cuối: `docs/dashboard-e2e-2026-11-13.md`.
+
+
 1. **Nguồn** → Thêm nguồn. Nguồn "đã xác minh quyền" cần license `owned` hoặc file bằng chứng (email, hợp đồng).
 2. **Tổng quan** cho biết worker đang làm gì, tài nguyên máy, lỗi gần đây.
 3. **Video** → video "Chờ xác minh quyền": mở, kiểm tra trang gốc, ghi căn cứ, xác nhận (chỉ quản trị viên).
